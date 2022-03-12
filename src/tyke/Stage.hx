@@ -43,7 +43,7 @@ class Stage {
 		return frameBuffer;
 	}
 
-	public function createLayer(name:String, useGlobalFrameBuffer:Bool = true) {
+	public function createLayer(name:String, useGlobalFrameBuffer:Bool = true):Layer {
 		var fb = useGlobalFrameBuffer ? globalFrameBuffer : makeFrameBuffer(name);
 		var layer = new Layer(fb);
 		layers[name] = layer;
