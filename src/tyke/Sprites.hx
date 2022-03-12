@@ -4,7 +4,20 @@ import tyke.Echo.Shape;
 import tyke.Loop;
 import tyke.Loop.Text;
 import tyke.Stage;
+/**
+x
+y
+rotation
+width
+height
+c // color
+tile
+shake
+shakeDurationX
+shakeDurationY
+visible
 
+**/
 
 class Sprite implements Element {
 	// @posX public var x:Int;

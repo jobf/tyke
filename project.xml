@@ -29,6 +29,9 @@
 	<haxelib name="peote-view" />
 	<haxelib name="peote-text" />
 	<haxelib name="ob.gum" />
+	<haxelib name="ob.parameters" />
+	<haxelib name="ob.seq" />
+	<haxelib name="ob.traxe" />
 	<haxelib name="echo" />
 	
 	<haxedef name="peotetext_debug_macro" />

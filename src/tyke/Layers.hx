@@ -67,6 +67,7 @@ class GlyphLayer extends GridLayer<GlyphModel> {
 	}
 
 	public function draw() {
+		// trace('draw');
 		for (i => cell in cells) {
 			cell.glyph.color = palette.colorOrDefault(cell.paletteIndexFg);
 			var bgColor = palette.colorOrDefault(cell.paletteIndexBg);

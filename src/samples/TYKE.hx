@@ -1,5 +1,6 @@
 package samples;
 
+import tyke.Traxe;
 import echo.data.Options.BodyOptions;
 import tyke.Echo;
 import tyke.Palettes.Sixteen;
@@ -126,7 +127,7 @@ class WordSoup {
 				}
 			}
 		}
-
+		var tnt = new Traxe();
 		glyphs = new GlyphLayer(config, fontProgram);
 	}
 
