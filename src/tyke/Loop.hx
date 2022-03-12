@@ -1,9 +1,12 @@
 package tyke;
 
+import echo.Echo;
+import echo.World;
 import tyke.Layers;
 import tyke.Palettes;
 import tyke.Keyboard;
 import tyke.Glyph;
+import tyke.Stage;
 
 typedef Text = {font:Font<FontStyle>, fontStyle:FontStyle, fontProgram:FontProgram<FontStyle>}
 
@@ -85,4 +88,57 @@ class GlyphLoop extends PeoteViewLoop {
 		keyboard.handle(code, this);
 	}
 
+}
+
+
+class PhysicalStageLoop extends PeoteViewLoop
+{
+	var stage:Stage;
+	var world:World;
+	var onInitComplete:Void->Void = () -> throw "You must set onInitComplete function!";
+	var assets:Assets;
+	var keyboard:KeyPresses<PhysicalStageLoop>;
+
+	public function new(assets:Assets) {
+		super();
+		this.assets = assets;
+		keyboard = new KeyPresses<PhysicalStageLoop>([]);
+	}
+
+	override function onInit(gum:Gum) {
+		super.onInit(gum);
+
+		assets.Preload(() -> {
+			initWorldAndStage();
+			onInitComplete();
+		});
+	}
+
+	function initWorldAndStage():Void {
+		stage = new Stage(display, this);
+		world = Echo.start({
+			width: display.width,
+			height: display.height,
+			gravity_y: 100,
+			iterations: 2
+		});
+	}
+
+	var alwaysDraw:Bool = false;
+
+	override public function onTick(tick:Int) {
+		var requestDrawUpdate = false;
+		
+
+		return alwaysDraw || requestDrawUpdate;
+	}
+
+	override public function onDraw(deltaMs:Int) {
+		world.step(deltaMs / 1000);
+		stage.updateGraphicsBuffers();
+	}
+
+	override public function onKeyDown(code:KeyCode, modifier:KeyModifier) {
+		keyboard.handle(code, this);
+	}
 }
