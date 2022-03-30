@@ -89,6 +89,14 @@ class Stage {
 	function get_height():Int {
 		return display.height;
 	}
+
+	public function centerX():Float {
+		return width * 0.5;
+	}
+
+	public function centerY():Float {
+		return height * 0.5;
+	}
 }
 
 class ViewElement implements Element {
