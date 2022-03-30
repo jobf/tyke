@@ -1,5 +1,6 @@
 package tyke;
 
+import ob.traxe.Track;
 import hl.I64;
 import ob.traxe.LaneConfiguration;
 import tyke.Echo.Shape;
@@ -22,7 +23,8 @@ class Traxe {
 	public function new() {
 		var timeContext = new DeltaTimeContext();
 		var audioContext = new NullAudioContext();
-		tracker = new Tracker(TrackerConfiguration.SevenOhSeven(), timeContext, audioContext);
+
+		tracker = new Tracker(timeContext, audioContext);
 		// tracker.onFocusChanged = focusCursor;
 		// tracker.onValueChanged = updateText;
 		// tracker.onTrackRowChanged = updateHeads;
@@ -54,53 +56,57 @@ typedef TrackView = {
 
 class GlyphTracker {
 	public final layerName = "glyphs";
+
 	var laneColumnsMap:Array<Array<Int>> = [];
 
 	public function new(glyphRender:GlyphFrames, cursorRender:DrawShapes, numColumns:Int, numRows:Int) {
-		this.glyphFrames = glyphRender;
+		this.glyphRender = glyphRender;
 		this.cursorRender = cursorRender;
-		var fontProgram = glyphFrames.fontProgram;
+
 		var config:GlyphLayerConfig = {
 			numColumns: numColumns,
 			numRows: numRows,
-			cellWidth: Math.ceil(fontProgram.fontStyle.width),
-			cellHeight: Math.ceil(fontProgram.fontStyle.height),
+			cellWidth: Math.ceil(glyphRender.fontProgram.fontStyle.width),
+			cellHeight: Math.ceil(glyphRender.fontProgram.fontStyle.height),
 			palette: new Palette(Sixteen.Versitle.toRGBA()),
 		}
-		glyphs = new GlyphLayer(config, fontProgram);
+
+		glyphs = new GlyphLayer(config, glyphRender.fontProgram);
+		
 		tnt = new Traxe();
 		tnt.tracker.onFocusChanged = focusCursor;
 		tnt.tracker.onValueChanged = updateText;
 		tnt.tracker.onTrackRowChanged = updateHeads;
+		tnt.tracker.onTrackAdded = initTrack;
+	}
 
+	function initTrack(track:Track) {
 		var x = 0;
 		var laneColumnIndex = 0;
-		for (t => track in tnt.tracker.tracks) {
-			var laneColumnIndexes = [];
-			if (t > tnt.tracker.tracks.length)
-				break;
-			for (lane in track.lanes) {
-				laneColumnIndexes.push(laneColumnIndex);
-				laneColumnIndex += lane.numColumns;
-				trace(lane.numRows);
-				for (rowIndex in 0...lane.numRows) {
-					var chars = lane.formatRow(rowIndex);
+		var laneColumnIndexes = [];
+		
+		for (lane in track.lanes) {
+			laneColumnIndexes.push(laneColumnIndex);
+			laneColumnIndex += lane.numColumns;
+			trace(lane.numRows);
+			for (rowIndex in 0...lane.numRows) {
+				var chars = lane.formatRow(rowIndex);
 
-					for (c in 0...lane.numColumns) {
-						// trace('grid cell ${x + c} $rowIndex');
-						var cell = glyphs.get(x + c, rowIndex);
-						cell.char = chars[c].char.charCodeAt(0);
-						fontProgram.glyphSetChar(cell.glyph, cell.char);
-						fontProgram.updateGlyph(cell.glyph);
-					}
+				for (c in 0...lane.numColumns) {
+					// trace('grid cell ${x + c} $rowIndex');
+					var cell = glyphs.get(x + c, rowIndex);
+					cell.char = chars[c].char.charCodeAt(0);
+					// glyphs. todo ? set following via GlyphLayer?
+					glyphRender.fontProgram.glyphSetChar(cell.glyph, cell.char);
+					glyphRender.fontProgram.updateGlyph(cell.glyph);
 				}
-				x += lane.numColumns;
 			}
-			laneColumnsMap.push(laneColumnIndexes);
+			x += lane.numColumns;
 		}
+		laneColumnsMap.push(laneColumnIndexes);
 		var cursorColor = Color.LIME;
 		cursorColor.alpha = 160;
-		cursor = cursorRender.makeShape(0, 0, glyphFrames.fontProgram.fontStyle.width, glyphFrames.fontProgram.fontStyle.height, RECT, cursorColor);
+		cursor = cursorRender.makeShape(0, 0, glyphRender.fontProgram.fontStyle.width, glyphRender.fontProgram.fontStyle.height, RECT, cursorColor);
 
 		focusCursor({
 			trackIndex: 0,
@@ -110,6 +116,7 @@ class GlyphTracker {
 		});
 	}
 
+
 	inline function getFocusSingle(cursor:NavigatorCursor):GlyphModel {
 		var columnIndex = laneColumnsMap[cursor.trackIndex][cursor.laneIndex] + cursor.columnIndex;
 		return glyphs.get(columnIndex, cursor.rowIndex);
@@ -117,13 +124,17 @@ class GlyphTracker {
 
 	inline function getFocusRow(trackIndex:Int, laneIndex:Int, rowIndex:Int, rowWidth:Int):Array<GlyphModel> {
 		var columnIndex = laneColumnsMap[trackIndex][laneIndex];
-		return [for(i in 0...rowWidth) glyphs.get(columnIndex + i, rowIndex)];
+		return [for (i in 0...rowWidth) glyphs.get(columnIndex + i, rowIndex)];
 	}
 
 	function focusCursor(cursor:NavigatorCursor) {
 		var g = getFocusSingle(cursor);
+
 		this.cursor.x = g.glyph.x + Std.int(this.cursor.w * 0.5);
 		this.cursor.y = g.glyph.y + Std.int(this.cursor.h * 0.5);
+		cursorRender.updateGraphicsBuffers();
+		
+		// trace('cursor pos ${this.cursor.x} ${this.cursor.y}');
 	}
 
 	function updateText(cursor:NavigatorCursor, update:LaneUpdate) {
@@ -150,7 +161,7 @@ class GlyphTracker {
 	}
 
 	var glyphs:GlyphLayer;
-	var glyphFrames:GlyphFrames;
+	var glyphRender:GlyphFrames;
 
 	var tnt:Traxe;
 
@@ -183,22 +194,22 @@ class GlyphTracker {
 		}
 	}
 
-	inline function updateGlyphs(data:Array<{char:String, column:ColumnType}>, trackIndex:Int, laneIndex:Int, rowIndex:Int){
+	inline function updateGlyphs(data:Array<{char:String, column:ColumnType}>, trackIndex:Int, laneIndex:Int, rowIndex:Int) {
 		var glyphs = getFocusRow(trackIndex, laneIndex, rowIndex, data.length);
-		if(glyphs == null){
+		if (glyphs == null) {
 			trace('bruh');
 		}
-			for (i => cell in data) {
-				if(glyphs[i] == null){
-					trace('braaaah');
-				}
-				glyphs[i].char = cell.char.charCodeAt(0);
+		for (i => cell in data) {
+			if (glyphs[i] == null) {
+				trace('braaaah');
 			}
+			glyphs[i].char = cell.char.charCodeAt(0);
+		}
 	}
 
 	function alterTrackViewLengths(changeRowCountBy:Int, trackIndex:Int) {
-		for(lane in tnt.tracker.tracks[trackIndex].lanes){
-			for(rowIndex in 0...lane.numRows){
+		for (lane in tnt.tracker.tracks[trackIndex].lanes) {
+			for (rowIndex in 0...lane.numRows) {
 				var data = lane.formatRow(rowIndex);
 				updateGlyphs(data, trackIndex, lane.index, rowIndex);
 			}
@@ -208,6 +219,10 @@ class GlyphTracker {
 		// else{
 
 		// }
+	}
+
+	public function addTrack(track:TrackDefinition) {
+		tnt.tracker.addTrack(track);
 	}
 }
 

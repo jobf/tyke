@@ -1,5 +1,10 @@
 package samples;
 
+import ob.traxe.ParameterDefinitions.ParameterLaneDef;
+import ob.parameters.Parameter;
+import ob.traxe.Track;
+import ob.parameters.ParameterType;
+import ob.traxe.Track;
 import tyke.Traxe.GlyphTracker;
 import tyke.Loop;
 
@@ -8,18 +13,39 @@ class TrackerLoop extends PhysicalStageLoop {
 		super(assets);
 
 		onInitComplete = () -> {
-			var glyphrender = stage.createGlyphFramesLayer("tyktrak", assets.fontCache[0]);
-			var cusorRender = stage.createEchoDebugLayer();
-			if(cusorRender != null ){
-				var numColumns = 64;
-				glyphTracker = new GlyphTracker(glyphrender, cusorRender, numColumns, 64);
-
+			if (assets.fontCache.length == 0) {
+				throw "No font no fun!";
 			}
 
-			
+			var glyphrender = stage.createGlyphFramesLayer("tyktrak", assets.fontCache[0]);
+			var cusorRender = stage.createShapeRenderLayer();
+			var canvas = stage.createShapeRenderLayer();
+			var circle = canvas.makeShape(stage.centerX(), stage.centerY(), 42, 42, CIRCLE, Color.WHITE);
+			var numColumns = 64;
+			glyphTracker = new GlyphTracker(glyphrender, cusorRender, numColumns, 64);
+
+			var track:TrackDefinition = {
+				label: "Circle",
+				lanes: [{
+					parameter: {
+						name: "Y axis",
+						id: 2,
+						type: ParameterType.PERCENT,
+						minimumValue: Std.int(circle.h * 0.5),
+						maximumValue: Std.int(stage.height - circle.h + (circle.h * 0.5)),
+						onTrigger: value -> {
+							circle.y = value;
+						}
+					},
+					laneType: Parameter
+				}],
+				numRows: 64
+			}
+
+			glyphTracker.addTrack(track);
+
 			alwaysDraw = true;
 			gum.toggleUpdate(true);
-
 		};
 	}
 
@@ -30,8 +56,8 @@ class TrackerLoop extends PhysicalStageLoop {
 
 	override function onKeyDown(code:KeyCode, modifier:KeyModifier) {
 		glyphTracker.onKeyDown(code, modifier);
-		
 	}
+
 	var glyphTracker:GlyphTracker;
 }
 
