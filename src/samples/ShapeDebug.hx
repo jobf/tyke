@@ -58,7 +58,7 @@ class ShapeShaker {
 	public function new(world:World, stage:Stage) {
 		this.world = world;
 		this.stage = stage;
-		shapesLayer = this.stage.createEchoDebugLayer();
+		shapesLayer = this.stage.createShapeRenderLayer();
 
 		mouseBody = new HardLight({
 			x: stage.width * 0.5,

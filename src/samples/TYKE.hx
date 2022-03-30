@@ -177,7 +177,7 @@ class SimulationSalad {
 
 	function initSprites(spriteSheet:Image) {
 		spriteFrames = stage.createSpriteFramesLayer(layerName, spriteSheet, frameSize);
-		debugLayer = stage.createEchoDebugLayer();
+		debugLayer = stage.createShapeRenderLayer();
 	}
 
 	function initEdges() {

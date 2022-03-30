@@ -57,7 +57,7 @@ class Stage {
 		layers[name] = layer;
 	}
 
-	public function createEchoDebugLayer():DrawShapes {
+	public function createShapeRenderLayer():DrawShapes {
 		final name = "echo";
 		var frames = new DrawShapes();
 		initGraphicsBuffer(name, frames);
