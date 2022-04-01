@@ -1,35 +1,17 @@
 package tyke;
 
 import ob.traxe.Track;
-import hl.I64;
 import ob.traxe.LaneConfiguration;
 import tyke.Echo.Shape;
 import tyke.Echo.DrawShapes;
 import tyke.Sprites;
 import tyke.Layers;
 import tyke.Palettes;
-import tyke.Keyboard;
 import tyke.Glyph;
-import tyke.Stage;
 import ob.traxe.Audio;
 import ob.traxe.Navigator;
-import ob.traxe.TrackerConfiguration;
-import ob.seq.Metronome;
 import ob.traxe.Tracker;
 
-class Traxe {
-	public var tracker:Tracker;
-
-	public function new() {
-		var timeContext = new DeltaTimeContext();
-		var audioContext = new NullAudioContext();
-
-		tracker = new Tracker(timeContext, audioContext);
-		// tracker.onFocusChanged = focusCursor;
-		// tracker.onValueChanged = updateText;
-		// tracker.onTrackRowChanged = updateHeads;
-	}
-}
 
 class NullAudioContext implements IAudioContext {
 	public function new() {
@@ -39,29 +21,16 @@ class NullAudioContext implements IAudioContext {
 	public var it(default, null):Dynamic;
 }
 
-typedef RowView = {
-	chars:String,
-	// line:Line<GlyphStylePacked>
-}
-
-typedef LaneView = {
-	rows:Array<RowView>
-}
-
-typedef TrackView = {
-	lanes:Array<LaneView>,
-	// beatMarker:ElementSimple,
-	playHeadIndex:Int
-}
-
 class GlyphTracker {
 	public final layerName = "glyphs";
 
 	var laneColumnsMap:Array<Array<Int>> = [];
 
-	public function new(glyphRender:GlyphFrames, cursorRender:DrawShapes, numColumns:Int, numRows:Int) {
+	public function new(glyphRender:GlyphFrames, cursorRender:DrawShapes, headsRender:DrawShapes, numColumns:Int, numRows:Int, tracker:Tracker) {
 		this.glyphRender = glyphRender;
 		this.cursorRender = cursorRender;
+		this.headsRender = headsRender;
+		this.tracker = tracker;
 
 		var config:GlyphLayerConfig = {
 			numColumns: numColumns,
@@ -72,23 +41,26 @@ class GlyphTracker {
 		}
 
 		glyphs = new GlyphLayer(config, glyphRender.fontProgram);
-		
-		tnt = new Traxe();
-		tnt.tracker.onFocusChanged = focusCursor;
-		tnt.tracker.onValueChanged = updateText;
-		tnt.tracker.onTrackRowChanged = updateHeads;
-		tnt.tracker.onTrackAdded = initTrack;
+
+		tracker.onFocusChanged = focusCursor;
+		tracker.onValueChanged = updateText;
+		tracker.onTrackRowChanged = updateHeads;
+		tracker.onTrackAdded = initTrack;
+
+		var cursorColor = Color.MAGENTA;
+		cursorColor.alpha = 160;
+		cursor = cursorRender.makeShape(0, 0, glyphRender.fontProgram.fontStyle.width, glyphRender.fontProgram.fontStyle.height, RECT, cursorColor);
 	}
 
 	function initTrack(track:Track) {
 		var x = 0;
 		var laneColumnIndex = 0;
 		var laneColumnIndexes = [];
-		
+
 		for (lane in track.lanes) {
 			laneColumnIndexes.push(laneColumnIndex);
 			laneColumnIndex += lane.numColumns;
-			trace(lane.numRows);
+			// trace(lane.numRows);
 			for (rowIndex in 0...lane.numRows) {
 				var chars = lane.formatRow(rowIndex);
 
@@ -101,12 +73,18 @@ class GlyphTracker {
 					glyphRender.fontProgram.updateGlyph(cell.glyph);
 				}
 			}
+			var playheadColor = 0x8cc060a0;
+			var playHeadWidth = lane.numColumns * glyphRender.fontProgram.fontStyle.width;
+			var xOffset = (playHeadWidth * 0.5);
+			var playheadX = (playHeadWidth * lane.index) + xOffset;
+			var playheadY = glyphRender.fontProgram.fontStyle.height * 0.5;
+			var playhead = headsRender.makeShape(playheadX, playheadY, playHeadWidth, glyphRender.fontProgram.fontStyle.height, RECT, playheadColor);
+			playHeads.push(playhead);
 			x += lane.numColumns;
 		}
 		laneColumnsMap.push(laneColumnIndexes);
-		var cursorColor = Color.LIME;
-		cursorColor.alpha = 160;
-		cursor = cursorRender.makeShape(0, 0, glyphRender.fontProgram.fontStyle.width, glyphRender.fontProgram.fontStyle.height, RECT, cursorColor);
+
+		cursorRender.updateGraphicsBuffers();
 
 		focusCursor({
 			trackIndex: 0,
@@ -115,7 +93,6 @@ class GlyphTracker {
 			rowIndex: 0
 		});
 	}
-
 
 	inline function getFocusSingle(cursor:NavigatorCursor):GlyphModel {
 		var columnIndex = laneColumnsMap[cursor.trackIndex][cursor.laneIndex] + cursor.columnIndex;
@@ -133,7 +110,7 @@ class GlyphTracker {
 		this.cursor.x = g.glyph.x + Std.int(this.cursor.w * 0.5);
 		this.cursor.y = g.glyph.y + Std.int(this.cursor.h * 0.5);
 		cursorRender.updateGraphicsBuffers();
-		
+
 		// trace('cursor pos ${this.cursor.x} ${this.cursor.y}');
 	}
 
@@ -148,13 +125,25 @@ class GlyphTracker {
 		}
 	}
 
-	function updateHeads(track:Int) {}
+	var playHeads:Array<Shape> = [];
+
+	function updateHeads(track:Int) {
+		var y = tracker.tracks[track].playIndex * (glyphRender.fontProgram.fontStyle.height + (glyphRender.fontProgram.fontStyle.height * 0.5));
+		trace('update heads y: $y');
+		
+		for(s in playHeads){
+			// todo ! individual lanes as well as tracks
+			s.y = y;
+		}
+	}
 
 	var waves = 2;
 	var gain = 0.02;
 	var elapsedTicks:Int = 0;
 
 	public function onTick(deltaMs:Int):Void {
+		// todo - track down the bug in stage 'layers' not calling updateGraphicsBuffers 
+		headsRender.updateGraphicsBuffers();
 		elapsedTicks++;
 		glyphs.onTick(deltaMs);
 		glyphs.draw();
@@ -163,18 +152,17 @@ class GlyphTracker {
 	var glyphs:GlyphLayer;
 	var glyphRender:GlyphFrames;
 
-	var tnt:Traxe;
-
 	public function onKeyDown(code:KeyCode, modifier:KeyModifier) {
-		tnt.tracker.handleKeyDown({keyCode: code, modifier: modifier});
+		tracker.handleKeyDown({keyCode: code, modifier: modifier});
 	}
 
 	var cursorRender:DrawShapes;
+	var headsRender:DrawShapes;
 
 	var cursor:Shape;
 
 	function updateRowText(trackIndex:Int, rowIndex:Int) {
-		var lane = tnt.tracker.laneUnderCursor();
+		var lane = tracker.laneUnderCursor();
 		var glyphs = getFocusRow(trackIndex, lane.index, rowIndex, lane.numColumns);
 		var data = lane.formatRow(rowIndex);
 		for (i => cell in data) {
@@ -183,7 +171,7 @@ class GlyphTracker {
 	}
 
 	function updateLaneText(trackIndex:Int) {
-		var lane = tnt.tracker.laneUnderCursor();
+		var lane = tracker.laneUnderCursor();
 		for (rowIndex in 0...lane.numRows) {
 			if (rowIndex > lane.rows.length - 1) {
 				// stop updating lines because they are actually empty
@@ -196,19 +184,13 @@ class GlyphTracker {
 
 	inline function updateGlyphs(data:Array<{char:String, column:ColumnType}>, trackIndex:Int, laneIndex:Int, rowIndex:Int) {
 		var glyphs = getFocusRow(trackIndex, laneIndex, rowIndex, data.length);
-		if (glyphs == null) {
-			trace('bruh');
-		}
 		for (i => cell in data) {
-			if (glyphs[i] == null) {
-				trace('braaaah');
-			}
 			glyphs[i].char = cell.char.charCodeAt(0);
 		}
 	}
 
 	function alterTrackViewLengths(changeRowCountBy:Int, trackIndex:Int) {
-		for (lane in tnt.tracker.tracks[trackIndex].lanes) {
+		for (lane in tracker.tracks[trackIndex].lanes) {
 			for (rowIndex in 0...lane.numRows) {
 				var data = lane.formatRow(rowIndex);
 				updateGlyphs(data, trackIndex, lane.index, rowIndex);
@@ -222,10 +204,22 @@ class GlyphTracker {
 	}
 
 	public function addTrack(track:TrackDefinition) {
-		tnt.tracker.addTrack(track);
+		tracker.addTrack(track);
 	}
+
+	public function toggleRunning() {
+		tracker.toggleIsStarted();
+	}
+
+	var tracker:Tracker;
 }
 
 typedef TrackGlyphs = {
 	rows:Array<Array<GlyphModel>>
+}
+
+@:structInit
+class Playhead {
+	public var graphic(default, null):Shape;
+	public var trackId(default, null):Int;
 }
