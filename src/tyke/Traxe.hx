@@ -136,7 +136,7 @@ class GlyphTracker {
 	var playHeads:Array<Shape> = [];
 
 	function updateHeads(track:Int) {
-		var y = tracker.tracks[track].playIndex * (glyphRender.fontProgram.fontStyle.height + (glyphRender.fontProgram.fontStyle.height * 0.5));
+		var y = (tracker.tracks[track].playIndex * glyphRender.fontProgram.fontStyle.height ) + (glyphRender.fontProgram.fontStyle.height * 0.5);
 		trace('update heads y: $y');
 		
 		for(s in playHeads){

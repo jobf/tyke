@@ -32,6 +32,7 @@ class TrackerLoop extends PhysicalStageLoop {
 
 			var track:TrackDefinition = {
 				label: "Circle",
+				numRows: 12,
 				lanes: [{
 					parameter: {
 						name: "y axis",
@@ -122,8 +123,7 @@ class TrackerLoop extends PhysicalStageLoop {
 						}
 					},
 					laneType: Parameter
-				}],
-				numRows: 10
+				}]
 			}
 
 			glyphTracker.addTrack(track);
