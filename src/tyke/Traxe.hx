@@ -1,5 +1,6 @@
 package tyke;
 
+import peote.text.Line;
 import ob.traxe.Track;
 import ob.traxe.LaneConfiguration;
 import tyke.Echo.Shape;
@@ -41,6 +42,7 @@ class GlyphTracker {
 		}
 
 		glyphs = new GlyphLayer(config, glyphRender.fontProgram);
+		statusLine = glyphRender.fontProgram.createLine('help is coming...', 0, 600 - glyphRender.fontProgram.fontStyle.height);
 
 		tracker.onFocusChanged = focusCursor;
 		tracker.onValueChanged = updateText;
@@ -110,8 +112,14 @@ class GlyphTracker {
 		this.cursor.x = g.glyph.x + Std.int(this.cursor.w * 0.5);
 		this.cursor.y = g.glyph.y + Std.int(this.cursor.h * 0.5);
 		cursorRender.updateGraphicsBuffers();
-
+		updateStatusLine(cursor);
 		// trace('cursor pos ${this.cursor.x} ${this.cursor.y}');
+	}
+	
+	function updateStatusLine(cursor:NavigatorCursor) {
+		var text = '${tracker.information()}';
+		var padChars = StringTools.rpad(text, " ", statusLine.length);
+		glyphRender.fontProgram.lineSetChars(statusLine, padChars);
 	}
 
 	function updateText(cursor:NavigatorCursor, update:LaneUpdate) {
@@ -212,14 +220,10 @@ class GlyphTracker {
 	}
 
 	var tracker:Tracker;
+
+	var statusLine:Line<FontStyle>;
 }
 
 typedef TrackGlyphs = {
 	rows:Array<Array<GlyphModel>>
-}
-
-@:structInit
-class Playhead {
-	public var graphic(default, null):Shape;
-	public var trackId(default, null):Int;
 }

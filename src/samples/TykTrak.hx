@@ -34,7 +34,7 @@ class TrackerLoop extends PhysicalStageLoop {
 				label: "Circle",
 				lanes: [{
 					parameter: {
-						name: "Y axis",
+						name: "y axis",
 						id: 1,
 						type: ParameterType.PERCENT,
 						minimumValue: Std.int(circle.h * 0.5),
@@ -60,7 +60,7 @@ class TrackerLoop extends PhysicalStageLoop {
 				},
 				{
 					parameter: {
-						name: "radius",
+						name: "width",
 						id: 3,
 						type: ParameterType.PERCENT,
 						minimumValue: 0,
@@ -73,8 +73,21 @@ class TrackerLoop extends PhysicalStageLoop {
 				},
 				{
 					parameter: {
+						name: "height",
+						id: 4,
+						type: ParameterType.PERCENT,
+						minimumValue: 0,
+						maximumValue: 255,
+						onTrigger: value -> {
+							circle.h = value;
+						}
+					},
+					laneType: Parameter
+				},
+				{
+					parameter: {
 						name: "red",
-						id: 3,
+						id: 5,
 						type: ParameterType.PERCENT,
 						minimumValue: 0,
 						maximumValue: 255,
@@ -87,7 +100,7 @@ class TrackerLoop extends PhysicalStageLoop {
 				{
 					parameter: {
 						name: "green",
-						id: 3,
+						id: 6,
 						type: ParameterType.PERCENT,
 						minimumValue: 0,
 						maximumValue: 255,
@@ -100,7 +113,7 @@ class TrackerLoop extends PhysicalStageLoop {
 				{
 					parameter: {
 						name: "blue",
-						id: 3,
+						id: 7,
 						type: ParameterType.PERCENT,
 						minimumValue: 0,
 						maximumValue: 255,
@@ -110,7 +123,7 @@ class TrackerLoop extends PhysicalStageLoop {
 					},
 					laneType: Parameter
 				}],
-				numRows: 16
+				numRows: 10
 			}
 
 			glyphTracker.addTrack(track);
@@ -151,10 +164,6 @@ class TrackerLoop extends PhysicalStageLoop {
 }
 
 class TykTrak extends App {
-	// var config:GlyphLoopConfig = {
-	// 	numCellsWide: 40,
-	// 	numCellsHigh: 40,
-	// }
 	override function init(window:Window, ?config:GumConfig) {
 		super.init(window, {
 			framesPerSecond: 30,
@@ -166,10 +175,6 @@ class TykTrak extends App {
 		gum.changeLoop(new TrackerLoop(assets()));
 	}
 
-	function initLoop() {
-		// override me
-	}
-
 	function assets() {
 		return new Assets({
 			fonts: ["assets/fonts/tiled/hack_ascii.json"],
@@ -177,28 +182,3 @@ class TykTrak extends App {
 		});
 	}
 }
-/**
-
-
-	class Template extends PhysicalStageLoop {
-	public function new(assets:Assets) {
-		super(assets);
-
-		onInitComplete = () -> {
-			glyphTracker = new GlyphTracker(10, 64, stage, assets.fontCache[0]);
-
-			alwaysDraw = true;
-			gum.toggleUpdate(true);
-		};
-	}
-
-	override function onTick(deltaMs:Int):Bool {
-		glyphTracker.onTick(deltaMs);
-		return super.onTick(deltaMs);
-	}
-
-	var glyphTracker:GlyphTracker;
-	}
-
-
-**/
