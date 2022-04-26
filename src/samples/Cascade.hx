@@ -14,9 +14,9 @@ class Cascade extends GlyphLoop {
 	}
 
 	function getInitFor(char:String, fg:Int, bg:Int):(Int, Int) -> GlyphModel {
-		final options:String = "ABCDEF";
+		final options:String = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
 		final maxIndex:Int = options.length;
-
+		var defaultFg = fg;
 		// final options:Array<String> = ["A", "B", "C", "D", "E", "F"];
 		return (col, row) -> {
 			var x = col * text.fontStyle.width;
@@ -24,7 +24,9 @@ class Cascade extends GlyphLoop {
 			var charCode:Int = " ".charCodeAt(0);
 			if (row < 3) {
 				charCode = "0".charCodeAt(0);
-			} else {
+				fg = 7;
+			} else if (row < 12) {
+				fg = defaultFg;
 				charCode = options.charCodeAt(randomInt(maxIndex) - 1);
 			}
 
@@ -40,27 +42,15 @@ class Cascade extends GlyphLoop {
 
 	function begin() {
 		var config:GlyphLayerConfig = {
-			numColumns: data.numCellsWide,
-			numRows: data.numCellsHigh,
+			numColumns: Math.ceil(display.width / text.fontStyle.width),
+			numRows: Math.ceil(display.height / text.fontStyle.height),
 			cellWidth: Math.ceil(text.fontStyle.width),
 			cellHeight: Math.ceil(text.fontStyle.height),
 			palette: palette,
 			cellInit: getInitFor(" ", 1, 3)
 		}
-		// var infoConfig:GlyphLayerConfig = {
-		// 	numColumns: data.numCellsWide,
-		// 	numRows: data.numCellsHigh,
-		// 	cellWidth: Math.ceil(text.fontStyle.width),
-		// 	cellHeight: Math.ceil(text.fontStyle.height),
-		// 	palette: palette,
-		// 	cellInit: getInitFor(" ", 0, -1)
-		// }
-
-		var demo = new CascadeLayer(config, text.fontProgram);
-		// var info = new Overlay(infoConfig, text.fontProgram);
-
-		// layers = [demo, info];
-		layers = [demo];
+		cascade = new CascadeLayer(config, text.fontProgram);
+		layers = [cascade];
 
 		mouse.onDown = (x, y, button) -> {
 			var pX = x / display.width;
@@ -69,18 +59,35 @@ class Cascade extends GlyphLoop {
 			var numVisibleRows = display.height / text.fontStyle.height;
 			var c = Math.floor(pX * numVisibleColumns);
 			var r = Math.floor(pY * numVisibleRows);
-			var underMouse = demo.get(c, r);
+			var underMouse = cascade.get(c, r);
 			var scrunitizedChar = underMouse.char;
-			var isClickable = scrunitizedChar != demo.emptyChar && underMouse.char >= demo.minChar;
+			var isClickable = scrunitizedChar != cascade.emptyChar && underMouse.char >= cascade.minChar;
 			if (isClickable) {
 				trace('$c $r ${underMouse.char}');
 
-				demo.clearAllMatching(underMouse.char);
+				cascade.clearAllMatching(underMouse.char);
+				isCascading = true;
 			}
 		}
-		demo.hasChanged = true;
+
+		cascade.hasChanged = true;
 		gum.toggleUpdate(true);
 	}
+
+	var isCascading:Bool;
+
+	override function onTick(tick:Int):Bool {
+		if(isCascading){
+			if(cascade.fall()){
+				cascade.hasChanged = true;
+			}else{
+				isCascading = false;
+			}
+		}
+		return super.onTick(tick);
+	}
+
+	var cascade:CascadeLayer;
 }
 
 class Overlay extends GlyphLayer {
@@ -108,6 +115,9 @@ class Overlay extends GlyphLayer {
 class CascadeLayer extends GlyphLayer {
 	public final emptyChar = " ".charCodeAt(0);
 	public final minChar = "A".charCodeAt(0);
+	public final treasureChar = "0".charCodeAt(0);
+
+	final threshold:Int = 12;
 
 	override function onTick(tick:Int):Void {
 		// hasChanged = true;
@@ -124,9 +134,57 @@ class CascadeLayer extends GlyphLayer {
 				numRemoved++;
 			}
 		}
-		trace(numRemoved);
+		// trace(numRemoved);
 		if (numRemoved > 0) {
 			hasChanged = true;
 		}
 	}
+
+	final canFallTo:Array<IntPair> = [
+		{
+			x: 1,
+			y: 1
+		},
+		{
+			x: 0,
+			y: 1
+		},
+		{
+			x: -1,
+			y: 1
+		}
+	];
+
+	public function fall():Bool {
+		var somethingMoved = false;
+		final isReversed = true;
+		forEach((c, r, each) -> {
+			if (each.char == treasureChar) {
+				for (o in canFallTo) {
+					var column = o.x + c;
+					var row = o.y + r;
+					if (!isInBounds(column, row))
+						continue;
+					var destination = get(column, row);
+					if (destination.char == emptyChar) {
+						update(c, r, cell -> {
+							destination.char = each.char;
+							destination.paletteIndexFg = each.paletteIndexFg;
+							cell.char = emptyChar;
+						});
+						somethingMoved = true;
+						break;
+					}
+				}
+			}
+		}, isReversed);
+
+		return somethingMoved;
+	}
+}
+
+@:structInit
+class IntPair {
+	public var x:Int;
+	public var y:Int;
 }
