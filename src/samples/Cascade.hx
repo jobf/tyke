@@ -1,5 +1,6 @@
 package samples;
 
+import tyke.Grid;
 import tyke.Palettes;
 import tyke.Layers;
 import tyke.Loop;
@@ -52,18 +53,12 @@ class Cascade extends GlyphLoop {
 		layers = [cascade];
 
 		mouse.onDown = (x, y, button) -> {
-			var pX = x / display.width;
-			var pY = y / display.height;
-			var numVisibleColumns = display.width / text.fontStyle.width;
-			var numVisibleRows = display.height / text.fontStyle.height;
-			var c = Math.floor(pX * numVisibleColumns);
-			var r = Math.floor(pY * numVisibleRows);
-			var underMouse = cascade.get(c, r);
+			var pointUnderMouse:Point = cascade.screenToGrid(x, y, display.width, display.height);
+			var underMouse = cascade.get(pointUnderMouse.x, pointUnderMouse.y);
 			var scrunitizedChar = underMouse.char;
 			var isClickable = scrunitizedChar != cascade.emptyChar && underMouse.char >= cascade.minChar;
 			if (isClickable) {
-				trace('$c $r ${underMouse.char}');
-
+				// trace('$c $r ${underMouse.char}');
 				cascade.clearAllMatching(underMouse.char);
 				isCascading = true;
 			}
@@ -139,7 +134,7 @@ class CascadeLayer extends GlyphLayer {
 		}
 	}
 
-	final canFallTo:Array<IntPair> = [
+	final canFallTo:Array<Point> = [
 		{
 			x: 0,
 			y: 1
@@ -206,10 +201,4 @@ class CascadeLayer extends GlyphLayer {
 
 		return somethingMoved;
 	}
-}
-
-@:structInit
-class IntPair {
-	public var x:Int;
-	public var y:Int;
 }
