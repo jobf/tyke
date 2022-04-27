@@ -17,7 +17,6 @@ class Cascade extends GlyphLoop {
 		final options:String = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
 		final maxIndex:Int = options.length;
 		var defaultFg = fg;
-		// final options:Array<String> = ["A", "B", "C", "D", "E", "F"];
 		return (col, row) -> {
 			var x = col * text.fontStyle.width;
 			var y = row * text.fontStyle.height;
@@ -77,10 +76,10 @@ class Cascade extends GlyphLoop {
 	var isCascading:Bool;
 
 	override function onTick(tick:Int):Bool {
-		if(isCascading){
-			if(cascade.fall()){
+		if (isCascading) {
+			if (cascade.changed()) {
 				cascade.hasChanged = true;
-			}else{
+			} else {
 				isCascading = false;
 			}
 		}
@@ -142,11 +141,11 @@ class CascadeLayer extends GlyphLayer {
 
 	final canFallTo:Array<IntPair> = [
 		{
-			x: 1,
+			x: 0,
 			y: 1
 		},
 		{
-			x: 0,
+			x: 1,
 			y: 1
 		},
 		{
@@ -155,25 +154,51 @@ class CascadeLayer extends GlyphLayer {
 		}
 	];
 
-	public function fall():Bool {
+	function moved(from:GlyphModel, column:Int, row:Int):Bool {
+		var to = get(column, row);
+		if (to.char == emptyChar) {
+			to.char = from.char;
+			to.paletteIndexFg = from.paletteIndexFg;
+			from.char = emptyChar;
+			// trace('moved');
+			return true;
+		}
+		return false;
+	}
+
+	public function changed():Bool {
 		var somethingMoved = false;
 		final isReversed = true;
 		forEach((c, r, each) -> {
 			if (each.char == treasureChar) {
-				for (o in canFallTo) {
-					var column = o.x + c;
-					var row = o.y + r;
-					if (!isInBounds(column, row))
-						continue;
-					var destination = get(column, row);
-					if (destination.char == emptyChar) {
-						update(c, r, cell -> {
-							destination.char = each.char;
-							destination.paletteIndexFg = each.paletteIndexFg;
-							cell.char = emptyChar;
-						});
+				var isGrounded = r == numRows - 1;
+				if (!isGrounded) {
+					// can fall so  will try various destinations
+					for (o in canFallTo) {
+						var column = o.x + c;
+						var row = o.y + r;
+						if (!isInBounds(column, row)) {
+							continue;
+						}
+						if (moved(each, column, row)) {
+							somethingMoved = true;
+							break;
+						}
+					}
+				} else {
+					// is on ground so exit the treasure
+					var column = c + 1;
+					var row = r;
+					var isExiting = column >= numColumns;
+					if (isExiting) {
+						// trace('score!');
+						each.char = emptyChar;
 						somethingMoved = true;
-						break;
+					} else {
+						if (moved(each, column, row)) {
+							// trace('exiting');
+							somethingMoved = true;
+						}
 					}
 				}
 			}
