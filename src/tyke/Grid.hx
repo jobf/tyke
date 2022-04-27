@@ -63,9 +63,16 @@ class GridStructure<T> extends GridLogic {
 		}
 	}
 
-	public function forEach(processCell:(Column, Row, T) -> Void) {
-		for (i => cell in cells) {
-			processCell(column(i), row(i), cell);
+	public function forEach(processCell:(Column, Row, T) -> Void, isReversed:Bool = false) {
+		if (isReversed) {
+			var i = cells.length;
+			while (i-- > 0){
+				processCell(column(i), row(i), cells[i]);
+			}
+		} else {
+			for (i => cell in cells) {
+				processCell(column(i), row(i), cell);
+			}
 		}
 	}
 
@@ -107,8 +114,18 @@ class GridStructure<T> extends GridLogic {
 		return cells[index(column, row)];
 	}
 
+	/**
+		store the passed cell into the grid at column,row
+	**/
 	public function set(column:Int, row:Int, cell:T) {
 		cells[index(column, row)] = cell;
+	}
+
+	/**
+		update cell at column,row by modifying with the function passed
+	**/
+	public function update(column:Int, row:Int, modifier:T->Void) {
+		modifier(cells[index(column, row)]);
 	}
 
 	public function swap(indexA:Int, indexB:Int) {
