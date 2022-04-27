@@ -1,8 +1,10 @@
 package;
 
+import samples.GlyphDemo;
+import samples.Cascade;
 import samples.ShapeDebug;
 import tyke.Glyph;
-import samples.GlyphDemo;
+
 import samples.TYKE;
 class SampleApp extends App{
 	var config:GlyphLoopConfig = {
@@ -39,6 +41,14 @@ class GlyphDemoApp extends SampleApp {
 	override function initLoop(){
 		super.initLoop();
 		gum.changeLoop(new GlyphDemo(config, assets()));
+	}
+}
+
+
+class CascadeApp extends SampleApp {
+	override function initLoop(){
+		super.initLoop();
+		gum.changeLoop(new Cascade(config, assets()));
 	}
 }
 
