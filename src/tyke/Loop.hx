@@ -34,6 +34,7 @@ class GlyphLoop extends PeoteViewLoop {
 	var data:GlyphLoopConfig;
 	var assets:Assets;
 	var keyboard:KeyPresses<GlyphLoop>;
+	var mouse:Mouse;
 	final transparent:Int = 0x00000000;
 	public var text:Text;
 
@@ -46,6 +47,7 @@ class GlyphLoop extends PeoteViewLoop {
 		this.palette = palette != null ? palette : new Palette(Sixteen.Versitle.toRGBA());
 		layers = [];
 		keyboard = new KeyPresses<GlyphLoop>([]);
+		mouse = new Mouse();
 	}
 
 	override function onInit(gum:Gum) {
@@ -88,6 +90,17 @@ class GlyphLoop extends PeoteViewLoop {
 		keyboard.handle(code, this);
 	}
 
+	override function onMouseDown(x:Float, y:Float, button:MouseButton) {
+		mouse.onDown(x, y, button);
+	}
+	
+	override function onMouseUp(x:Float, y:Float, button:MouseButton) {
+		mouse.onUp(x, y, button);
+	}
+
+	override function onMouseMove(x:Float, y:Float) {
+		mouse.onMove(x, y);
+	}
 }
 
 
