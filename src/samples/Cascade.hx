@@ -7,8 +7,9 @@ import tyke.Loop;
 import tyke.Glyph;
 
 // todo ! drop Text and just use FontProgram
+
 @:structInit
-class ScreenGeometry{
+class ScreenGeometry {
 	public var displayColumns:Int;
 	public var displayRows:Int;
 
@@ -34,10 +35,9 @@ class Cascade extends GlyphLoop {
 			var x = col * text.fontStyle.width;
 			var y = row * text.fontStyle.height;
 			var charCode:Int = " ".charCodeAt(0);
-			if(col < geometry.boundaryColumnLeft || col > geometry.boundaryColumnRight){
+			if (col < geometry.boundaryColumnLeft || col > geometry.boundaryColumnRight) {
 				charCode = " ".charCodeAt(0);
-			}
-			else if (row < 3) {
+			} else if (row < 3) {
 				charCode = "0".charCodeAt(0);
 				fg = 7;
 			} else if (row < 12) {
@@ -150,17 +150,41 @@ class Overlay extends GlyphLayer {
 	}
 }
 
-class CacadeArea{
-	public function new(){
-
-	}
+class CacadeArea {
+	public function new() {}
 }
 
 class CascadeLayer extends GlyphLayer {
-
-	public function new(config:GlyphLayerConfig, fontProgram:FontProgram<FontStyle>, geometry:ScreenGeometry){
+	public function new(config:GlyphLayerConfig, fontProgram:FontProgram<FontStyle>, geometry:ScreenGeometry) {
 		super(config, fontProgram);
 		this.geometry = geometry;
+
+		player1 = setupPlayer("Player 1");
+		player2 = setupPlayer("Player 2");
+		player1ScoreBoard = setupScoreBoard(0, 2, this.geometry.boundaryColumnLeft);
+		player2ScoreBoard = setupScoreBoard(this.geometry.boundaryColumnRight + 1, 2, this.geometry.boundaryColumnLeft);
+		writeText(player1ScoreBoard.position.x, player1ScoreBoard.nameRow, player1.name, player1ScoreBoard.width);
+		writeText(player2ScoreBoard.position.x, player2ScoreBoard.nameRow, player2.name, player2ScoreBoard.width);
+	}
+
+	function setupPlayer(name:String):Player {
+		return {
+			score: 0,
+			name: name,
+			modifiers: []
+		};
+	}
+
+	function setupScoreBoard(column:Int, row:Int, width:Int):ScoreBoard {
+		return {
+			width: width,
+			position: {
+				x: column,
+				y: row
+			},
+			nameRow: 0,
+			scoreRow: 2
+		};
 	}
 
 	public final emptyChar = " ".charCodeAt(0);
@@ -216,16 +240,22 @@ class CascadeLayer extends GlyphLayer {
 		}
 		return false;
 	}
-	
+
 	public function isInPlayableBounds(column:Int, row:Int):Bool {
 		return column >= geometry.boundaryColumnLeft && row >= 0 && column <= geometry.boundaryColumnRight && row < numRows;
 	}
+
+	var player1:Player;
+	var player1ScoreBoard:ScoreBoard;
+	var player2:Player;
+	var player2ScoreBoard:ScoreBoard;
 
 	public function changed(isPlayerOnLeft:Bool = true):Bool {
 		var somethingMoved = false;
 		final isReversed = true;
 		final updatingIndidivually = true;
 		final isCancelable = updatingIndidivually;
+
 		forEachCancelable((c, r, each) -> {
 			if (each.char == treasureChar) {
 				var isGrounded = r == numRows - 1;
@@ -244,7 +274,7 @@ class CascadeLayer extends GlyphLayer {
 					}
 				} else {
 					// is on ground so exit the treasure
-					var groundedDirection = isPlayerOnLeft ? 1 : -1;
+					var groundedDirection = isPlayerOnLeft ? -1 : 1;
 					var column = c + groundedDirection;
 					var row = r;
 					var isExiting = column >= geometry.boundaryColumnRight || column <= geometry.boundaryColumnLeft;
@@ -252,6 +282,12 @@ class CascadeLayer extends GlyphLayer {
 						// trace('score!');
 						each.char = emptyChar;
 						somethingMoved = true;
+						var player = isPlayerOnLeft ? player1 : player2;
+						var scoreBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
+						var score = 5;
+						player.score += score;
+						writeText(scoreBoard.position.x, scoreBoard.position.y, '${player.score}', scoreBoard.width);
+					
 					} else {
 						if (moved(each, column, row)) {
 							// trace('exiting');
@@ -267,4 +303,38 @@ class CascadeLayer extends GlyphLayer {
 	}
 
 	var geometry:ScreenGeometry;
+}
+
+typedef PointsModifier = Int->Int;
+
+@:structInit
+class Player {
+	public var name:String;
+	public var score:Int;
+	public var modifiers:Array<PointsModifier>;
+}
+
+@:structInit
+class ScoreBoard {
+	public var position:Point;
+	public var width:Int;
+
+	public var nameRow:Int;
+	public var scoreRow:Int;
+	// public function writeName(grid:GridStructure<GlyphModel>, name:String) {
+	// 	writeText(grid, position.x, nameRow, name);
+	// }
+	// public function writeScore(grid:GridStructure<GlyphModel>, score:Int) {
+	// 	writeText(grid, position.x, scoreRow, '$score');
+	// }
+	// inline function writeText(grid:GridStructure<GlyphModel>, c:Int, r:Int, text:String) {
+	// 	var chars = text.split("");
+	// 	for (x in 0...width) {
+	// 		var char = chars.length - 1 < x ? chars[x] : " ";
+	// 		write(grid, c + x, r, char.charCodeAt(0));
+	// 	}
+	// }
+	// inline function write(grid:GridStructure<GlyphModel>, c:Int, r:Int, charCode:Int) {
+	// 	grid.update(c, r, cell -> cell.char = charCode);
+	// }
 }
