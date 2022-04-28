@@ -51,7 +51,7 @@ class Cascade extends GlyphLoop {
 		}
 		cascade = new CascadeLayer(config, text.fontProgram);
 		layers = [cascade];
-
+		isPlayerOnLeft = true;
 		mouse.onDown = (x, y, button) -> {
 			if (isCascading)
 				return;
@@ -63,6 +63,7 @@ class Cascade extends GlyphLoop {
 				// trace('$c $r ${underMouse.char}');
 				cascade.clearAllMatching(underMouse.char);
 				isCascading = true;
+				isPlayerOnLeft = !isPlayerOnLeft;
 			}
 		}
 
@@ -74,7 +75,7 @@ class Cascade extends GlyphLoop {
 
 	override function onTick(tick:Int):Bool {
 		if (isCascading) {
-			if (cascade.changed()) {
+			if (cascade.changed(isPlayerOnLeft)) {
 				cascade.hasChanged = true;
 			} else {
 				isCascading = false;
@@ -84,6 +85,8 @@ class Cascade extends GlyphLoop {
 	}
 
 	var cascade:CascadeLayer;
+
+	var isPlayerOnLeft:Bool;
 }
 
 class Overlay extends GlyphLayer {
@@ -163,7 +166,7 @@ class CascadeLayer extends GlyphLayer {
 		return false;
 	}
 
-	public function changed():Bool {
+	public function changed(isPlayerOnLeft:Bool = true):Bool {
 		var somethingMoved = false;
 		final isReversed = true;
 		final updatingIndidivually = true;
@@ -186,9 +189,10 @@ class CascadeLayer extends GlyphLayer {
 					}
 				} else {
 					// is on ground so exit the treasure
-					var column = c + 1;
+					var groundedDirection = isPlayerOnLeft ? 1 : -1;
+					var column = c + groundedDirection;
 					var row = r;
-					var isExiting = column >= numColumns;
+					var isExiting = column >= numColumns || column <= 0;
 					if (isExiting) {
 						// trace('score!');
 						each.char = emptyChar;
