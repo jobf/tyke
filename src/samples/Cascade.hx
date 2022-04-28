@@ -7,6 +7,17 @@ import tyke.Loop;
 import tyke.Glyph;
 
 // todo ! drop Text and just use FontProgram
+@:structInit
+class ScreenGeometry{
+	public var displayColumns:Int;
+	public var displayRows:Int;
+
+	public var displayPixelsWide:Int;
+	public var displayPixelsHigh:Int;
+
+	public var boundaryColumnLeft:Int;
+	public var boundaryColumnRight:Int;
+}
 
 class Cascade extends GlyphLoop {
 	public function new(data:GlyphLoopConfig, assets:Assets, ?palette:Palette) {
@@ -14,15 +25,19 @@ class Cascade extends GlyphLoop {
 		onInitComplete = begin;
 	}
 
-	function getInitFor(char:String, fg:Int, bg:Int):(Int, Int) -> GlyphModel {
+	function getInitFor(char:String, fg:Int, bg:Int, geometry:ScreenGeometry):(Int, Int) -> GlyphModel {
 		final options:String = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
 		final maxIndex:Int = options.length;
+
 		var defaultFg = fg;
 		return (col, row) -> {
 			var x = col * text.fontStyle.width;
 			var y = row * text.fontStyle.height;
 			var charCode:Int = " ".charCodeAt(0);
-			if (row < 3) {
+			if(col < geometry.boundaryColumnLeft || col > geometry.boundaryColumnRight){
+				charCode = " ".charCodeAt(0);
+			}
+			else if (row < 3) {
 				charCode = "0".charCodeAt(0);
 				fg = 7;
 			} else if (row < 12) {
@@ -41,21 +56,39 @@ class Cascade extends GlyphLoop {
 	}
 
 	function begin() {
+		final numColumns = 19;
+		final numRows = 16;
+		var numColumnsInDisplay = Math.ceil(display.width / text.fontStyle.width);
+		var border = numColumnsInDisplay - numColumns;
+		var boundaryLeft = Std.int(border * 0.5);
+		var boundarRight = numColumnsInDisplay - boundaryLeft;
+		geometry = {
+			displayRows: Math.ceil(display.height / text.fontStyle.height),
+			displayColumns: numColumnsInDisplay,
+			displayPixelsWide: display.width,
+			displayPixelsHigh: display.height,
+			boundaryColumnRight: boundarRight,
+			boundaryColumnLeft: boundaryLeft
+		}
 		var config:GlyphLayerConfig = {
-			numColumns: Math.ceil(display.width / text.fontStyle.width),
-			numRows: Math.ceil(display.height / text.fontStyle.height),
+			numColumns: geometry.displayColumns,
+			numRows: geometry.displayRows,
+			// numColumns: 19,
+			// numRows: 16,
 			cellWidth: Math.ceil(text.fontStyle.width),
 			cellHeight: Math.ceil(text.fontStyle.height),
 			palette: palette,
-			cellInit: getInitFor(" ", 1, 3)
+			cellInit: getInitFor(" ", 1, 3, geometry)
 		}
-		cascade = new CascadeLayer(config, text.fontProgram);
+		playWidth = config.numColumns * config.cellWidth;
+		playHeight = config.numRows * config.cellHeight;
+		cascade = new CascadeLayer(config, text.fontProgram, geometry);
 		layers = [cascade];
 		isPlayerOnLeft = true;
 		mouse.onDown = (x, y, button) -> {
 			if (isCascading)
 				return;
-			var pointUnderMouse:Point = cascade.screenToGrid(x, y, display.width, display.height);
+			var pointUnderMouse:Point = cascade.screenToGrid(x, y, playWidth, playHeight);
 			var underMouse = cascade.get(pointUnderMouse.x, pointUnderMouse.y);
 			var scrunitizedChar = underMouse.char;
 			var isClickable = scrunitizedChar != cascade.emptyChar && underMouse.char >= cascade.minChar;
@@ -84,9 +117,15 @@ class Cascade extends GlyphLoop {
 		return super.onTick(tick);
 	}
 
+	var geometry:ScreenGeometry;
+
 	var cascade:CascadeLayer;
 
 	var isPlayerOnLeft:Bool;
+
+	var playWidth:Int;
+
+	var playHeight:Int;
 }
 
 class Overlay extends GlyphLayer {
@@ -111,7 +150,19 @@ class Overlay extends GlyphLayer {
 	}
 }
 
+class CacadeArea{
+	public function new(){
+
+	}
+}
+
 class CascadeLayer extends GlyphLayer {
+
+	public function new(config:GlyphLayerConfig, fontProgram:FontProgram<FontStyle>, geometry:ScreenGeometry){
+		super(config, fontProgram);
+		this.geometry = geometry;
+	}
+
 	public final emptyChar = " ".charCodeAt(0);
 	public final minChar = "A".charCodeAt(0);
 	public final treasureChar = "0".charCodeAt(0);
@@ -165,6 +216,10 @@ class CascadeLayer extends GlyphLayer {
 		}
 		return false;
 	}
+	
+	public function isInPlayableBounds(column:Int, row:Int):Bool {
+		return column >= geometry.boundaryColumnLeft && row >= 0 && column <= geometry.boundaryColumnRight && row < numRows;
+	}
 
 	public function changed(isPlayerOnLeft:Bool = true):Bool {
 		var somethingMoved = false;
@@ -179,7 +234,7 @@ class CascadeLayer extends GlyphLayer {
 					for (o in canFallTo) {
 						var column = o.x + c;
 						var row = o.y + r;
-						if (!isInBounds(column, row)) {
+						if (!isInPlayableBounds(column, row)) {
 							continue;
 						}
 						if (moved(each, column, row)) {
@@ -192,7 +247,7 @@ class CascadeLayer extends GlyphLayer {
 					var groundedDirection = isPlayerOnLeft ? 1 : -1;
 					var column = c + groundedDirection;
 					var row = r;
-					var isExiting = column >= numColumns || column <= 0;
+					var isExiting = column >= geometry.boundaryColumnRight || column <= geometry.boundaryColumnLeft;
 					if (isExiting) {
 						// trace('score!');
 						each.char = emptyChar;
@@ -210,4 +265,6 @@ class CascadeLayer extends GlyphLayer {
 
 		return somethingMoved;
 	}
+
+	var geometry:ScreenGeometry;
 }
