@@ -66,12 +66,30 @@ class GridStructure<T> extends GridLogic {
 	public function forEach(processCell:(Column, Row, T) -> Void, isReversed:Bool = false) {
 		if (isReversed) {
 			var i = cells.length;
-			while (i-- > 0){
+			while (i-- > 0) {
 				processCell(column(i), row(i), cells[i]);
 			}
 		} else {
 			for (i => cell in cells) {
 				processCell(column(i), row(i), cell);
+			}
+		}
+	}
+
+	public function forEachCancelable(processCell:(Column, Row, T) -> Bool, isReversed:Bool = false) {
+		var isCancelled = false;
+		if (isReversed) {
+			var i = cells.length;
+			while (i-- > 0) {
+				isCancelled = processCell(column(i), row(i), cells[i]);
+				if (isCancelled)
+					break;
+			}
+		} else {
+			for (i => cell in cells) {
+				isCancelled = processCell(column(i), row(i), cell);
+				if (isCancelled)
+					break;
 			}
 		}
 	}
@@ -165,6 +183,7 @@ class GridStructure<T> extends GridLogic {
 			return pixel > 0 ? 1 : 0;
 		});
 	}
+
 }
 
 /**
