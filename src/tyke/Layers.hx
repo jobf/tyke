@@ -91,6 +91,19 @@ class GlyphLayer extends GridLayer<GlyphModel> {
 		var r = Math.floor(pY * numVisibleRows);
 		return {x: c, y: r};
 	}
+
+	public function writeText(column:Int, row:Int, text:String, trimAt:Int = 0) {
+		var chars = text.split("");
+		var width = trimAt == 0 ? chars.length : trimAt;
+		for (x in 0...width) {
+			var char = x < chars.length  ? chars[x] : " ";
+			trace('column $column $char');
+			var cell = get(column + x, row);
+			cell.char = char.charCodeAt(0);
+			cell.paletteIndexFg = 9;
+		}
+		hasChanged = true;
+	}
 }
 
 typedef GlyphLayerConfig = LayerConfig<GlyphModel>
