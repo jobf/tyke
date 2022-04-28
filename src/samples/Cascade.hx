@@ -164,7 +164,9 @@ class CascadeLayer extends GlyphLayer {
 	public function changed():Bool {
 		var somethingMoved = false;
 		final isReversed = true;
-		forEach((c, r, each) -> {
+		final updatingIndidivually = true;
+		final isCancelable = updatingIndidivually;
+		forEachCancelable((c, r, each) -> {
 			if (each.char == treasureChar) {
 				var isGrounded = r == numRows - 1;
 				if (!isGrounded) {
@@ -197,6 +199,7 @@ class CascadeLayer extends GlyphLayer {
 					}
 				}
 			}
+			return isCancelable && somethingMoved;
 		}, isReversed);
 
 		return somethingMoved;
