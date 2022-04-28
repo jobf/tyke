@@ -12,7 +12,7 @@ import tyke.Glyph;
 class ScreenGeometry {
 	public var displayColumns:Int;
 	public var displayRows:Int;
-
+	public var playableColumnsWidth:Int;
 	public var displayPixelsWide:Int;
 	public var displayPixelsHigh:Int;
 
@@ -57,12 +57,13 @@ class Cascade extends GlyphLoop {
 
 	function begin() {
 		final numColumns = 19;
-		final numRows = 16;
-		var numColumnsInDisplay = Math.ceil(display.width / text.fontStyle.width);
+		// final numRows = 16;
+		var numColumnsInDisplay = Math.ceil(display.width / text.fontStyle.width) ;
 		var border = numColumnsInDisplay - numColumns;
 		var boundaryLeft = Std.int(border * 0.5);
 		var boundarRight = numColumnsInDisplay - boundaryLeft;
 		geometry = {
+			playableColumnsWidth: numColumns,
 			displayRows: Math.ceil(display.height / text.fontStyle.height),
 			displayColumns: numColumnsInDisplay,
 			displayPixelsWide: display.width,
@@ -89,6 +90,10 @@ class Cascade extends GlyphLoop {
 			if (isCascading)
 				return;
 			var pointUnderMouse:Point = cascade.screenToGrid(x, y, playWidth, playHeight);
+			// if (pointUnderMouse.x < geometry.boundaryColumnLeft || pointUnderMouse.x > geometry.boundaryColumnRight)
+			// 	// mouse click is out of clickable area
+			// 	return;
+
 			var underMouse = cascade.get(pointUnderMouse.x, pointUnderMouse.y);
 			var scrunitizedChar = underMouse.char;
 			var isClickable = scrunitizedChar != cascade.emptyChar && underMouse.char >= cascade.minChar;
@@ -158,7 +163,8 @@ class CascadeLayer extends GlyphLayer {
 	public function new(config:GlyphLayerConfig, fontProgram:FontProgram<FontStyle>, geometry:ScreenGeometry) {
 		super(config, fontProgram);
 		this.geometry = geometry;
-
+		// todo - why is this this.geometry.playableColumnsWidth + 2 ?
+		clickableIndexes = indexesInSection(this.geometry.boundaryColumnLeft, 0, this.geometry.playableColumnsWidth + 2, this.geometry.displayRows - 1);
 		player1 = setupPlayer("Player 1");
 		player2 = setupPlayer("Player 2");
 		player1ScoreBoard = setupScoreBoard(0, 2, this.geometry.boundaryColumnLeft);
@@ -202,15 +208,13 @@ class CascadeLayer extends GlyphLayer {
 
 	public function clearAllMatching(charCode:Int) {
 		var numRemoved = 0;
-		for (i => cell in cells) {
+		for(index in clickableIndexes){
+			var cell = cells[index];
 			if (cell.char == charCode) {
 				cell.char = emptyChar;
 				numRemoved++;
+				hasChanged = true;
 			}
-		}
-		// trace(numRemoved);
-		if (numRemoved > 0) {
-			hasChanged = true;
 		}
 	}
 
@@ -287,7 +291,6 @@ class CascadeLayer extends GlyphLayer {
 						var score = 5;
 						player.score += score;
 						writeText(scoreBoard.position.x, scoreBoard.position.y, '${player.score}', scoreBoard.width);
-					
 					} else {
 						if (moved(each, column, row)) {
 							// trace('exiting');
@@ -303,6 +306,8 @@ class CascadeLayer extends GlyphLayer {
 	}
 
 	var geometry:ScreenGeometry;
+
+	var clickableIndexes:Array<Int>;
 }
 
 typedef PointsModifier = Int->Int;
@@ -321,20 +326,4 @@ class ScoreBoard {
 
 	public var nameRow:Int;
 	public var scoreRow:Int;
-	// public function writeName(grid:GridStructure<GlyphModel>, name:String) {
-	// 	writeText(grid, position.x, nameRow, name);
-	// }
-	// public function writeScore(grid:GridStructure<GlyphModel>, score:Int) {
-	// 	writeText(grid, position.x, scoreRow, '$score');
-	// }
-	// inline function writeText(grid:GridStructure<GlyphModel>, c:Int, r:Int, text:String) {
-	// 	var chars = text.split("");
-	// 	for (x in 0...width) {
-	// 		var char = chars.length - 1 < x ? chars[x] : " ";
-	// 		write(grid, c + x, r, char.charCodeAt(0));
-	// 	}
-	// }
-	// inline function write(grid:GridStructure<GlyphModel>, c:Int, r:Int, charCode:Int) {
-	// 	grid.update(c, r, cell -> cell.char = charCode);
-	// }
 }
