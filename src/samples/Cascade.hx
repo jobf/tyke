@@ -53,6 +53,8 @@ class Cascade extends GlyphLoop {
 		layers = [cascade];
 
 		mouse.onDown = (x, y, button) -> {
+			if (isCascading)
+				return;
 			var pointUnderMouse:Point = cascade.screenToGrid(x, y, display.width, display.height);
 			var underMouse = cascade.get(pointUnderMouse.x, pointUnderMouse.y);
 			var scrunitizedChar = underMouse.char;
