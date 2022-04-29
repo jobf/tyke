@@ -280,7 +280,8 @@ class CascadeLayer extends GlyphLayer {
 		final isReversed = true;
 		final updatingIndidivually = true;
 		final isCancelable = updatingIndidivually;
-
+		var player = isPlayerOnLeft ? player1 : player2;
+		var scoreBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
 		forEachCancelable((c, r, each) -> {
 			if (each.char == treasureChar) {
 				var isGrounded = r == numRows - 1;
@@ -307,13 +308,9 @@ class CascadeLayer extends GlyphLayer {
 						// trace('score!');
 						each.char = emptyChar;
 						somethingMoved = true;
-						var player = isPlayerOnLeft ? player1 : player2;
-						var scoreBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
+
 						var score = 5;
 						player.score += score;
-						var modText = player.modifiers.map(modifier -> String.fromCharCode(modifier.charCode)).join(" ");
-						writeText(scoreBoard.position.x, 6, modText, scoreBoard.width);
-						trace('${player.name} $modText');
 						for (i => mod in player.modifiers) {
 							player.score += mod.scoreMod(score);
 							// writeText(0, 0, String.fromCharCode(mod.charCode), scoreBoard.width);
@@ -328,6 +325,10 @@ class CascadeLayer extends GlyphLayer {
 						}
 					}
 				}
+			}
+			if (somethingMoved) {
+				var modText = player.modifiers.map(modifier -> String.fromCharCode(modifier.charCode)).join(" ");
+				writeText(scoreBoard.position.x, 6, modText, scoreBoard.width);
 			}
 			return isCancelable && somethingMoved;
 		}, isReversed);
