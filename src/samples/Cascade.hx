@@ -72,7 +72,7 @@ class Cascade extends GlyphLoop {
 			displayPixelsWide: display.width,
 			displayPixelsHigh: display.height,
 			playBoundsRight: boundarRight,
-			playBoundsLeft: boundaryLeft,
+			playBoundsLeft: boundaryLeft - 1,
 			playBoundsTop: 3,
 			playBoundsBottom: 12
 		}
@@ -107,7 +107,6 @@ class Cascade extends GlyphLoop {
 				// trace('$c $r ${underMouse.char}');
 				cascade.clearAllMatching(underMouse.char);
 				isCascading = true;
-				isPlayerOnLeft = !isPlayerOnLeft;
 			}
 		}
 
@@ -123,6 +122,8 @@ class Cascade extends GlyphLoop {
 				cascade.hasChanged = true;
 			} else {
 				isCascading = false;
+				swapPlayer();
+				cascade.showPlayerTurn(isPlayerOnLeft);
 			}
 		}
 		return super.onTick(tick);
@@ -137,6 +138,10 @@ class Cascade extends GlyphLoop {
 	var playWidth:Int;
 
 	var playHeight:Int;
+
+	function swapPlayer() {
+		isPlayerOnLeft = !isPlayerOnLeft;
+	}
 }
 
 class Overlay extends GlyphLayer {
@@ -179,6 +184,7 @@ class CascadeLayer extends GlyphLayer {
 
 		initModifiers();
 		initPlayers();
+		showPlayerTurn(true);
 	}
 
 	function setupPlayer(name:String):Player {
@@ -197,7 +203,9 @@ class CascadeLayer extends GlyphLayer {
 				y: row
 			},
 			nameRow: 0,
-			scoreRow: 2
+			turnIndicatorRow: 1,
+			modsRow: 3,
+			scoreRow: 5,
 		};
 	}
 
@@ -282,6 +290,7 @@ class CascadeLayer extends GlyphLayer {
 		final isCancelable = updatingIndidivually;
 		var player = isPlayerOnLeft ? player1 : player2;
 		var scoreBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
+		var score = 5;
 		forEachCancelable((c, r, each) -> {
 			if (each.char == treasureChar) {
 				var isGrounded = r == numRows - 1;
@@ -309,7 +318,7 @@ class CascadeLayer extends GlyphLayer {
 						each.char = emptyChar;
 						somethingMoved = true;
 
-						var score = 5;
+						
 						player.score += score;
 						for (i => mod in player.modifiers) {
 							player.score += mod.scoreMod(score);
@@ -317,7 +326,7 @@ class CascadeLayer extends GlyphLayer {
 							// trace(scoreBoard.position.x);
 							// writeText(scoreBoard.position.x + (i * 2), scoreBoard.position.y, String.fromCharCode(mod.charCode), scoreBoard.width);
 						}
-						writeText(scoreBoard.position.x, scoreBoard.position.y, '${player.score}', scoreBoard.width);
+						writeText(scoreBoard.position.x, scoreBoard.scoreRow, '# ${player.score}', scoreBoard.width);
 					} else {
 						if (moved(each, column, row, isPlayerOnLeft)) {
 							// trace('exiting');
@@ -327,8 +336,7 @@ class CascadeLayer extends GlyphLayer {
 				}
 			}
 			if (somethingMoved) {
-				var modText = player.modifiers.map(modifier -> String.fromCharCode(modifier.charCode)).join(" ");
-				writeText(scoreBoard.position.x, 6, modText, scoreBoard.width);
+				updateModText(player, scoreBoard, score);
 			}
 			return isCancelable && somethingMoved;
 		}, isReversed);
@@ -353,12 +361,27 @@ class CascadeLayer extends GlyphLayer {
 	}
 
 	function initPlayers() {
+		final score = 5;
 		player1 = setupPlayer("Player 1");
 		player2 = setupPlayer("Player 2");
 		player1ScoreBoard = setupScoreBoard(0, 2, this.geometry.playBoundsLeft);
 		player2ScoreBoard = setupScoreBoard(this.geometry.playBoundsRight + 1, 2, this.geometry.playBoundsLeft);
 		writeText(player1ScoreBoard.position.x, player1ScoreBoard.nameRow, player1.name, player1ScoreBoard.width);
 		writeText(player2ScoreBoard.position.x, player2ScoreBoard.nameRow, player2.name, player2ScoreBoard.width);
+		updateModText(player1, player1ScoreBoard, score);
+		updateModText(player2, player2ScoreBoard, score);
+	}
+
+	public function showPlayerTurn(isPlayerOnLeft:Bool) {
+		var currentBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
+		var otherBoard = isPlayerOnLeft ? player2ScoreBoard : player1ScoreBoard;
+		writeText(currentBoard.position.x, currentBoard.turnIndicatorRow, "-------^", currentBoard.width);
+		writeText(otherBoard.position.x, otherBoard.turnIndicatorRow, "        ", otherBoard.width);
+	}
+
+	function updateModText(player:Player, scoreBoard:ScoreBoard, score:Int) {
+		var modText = '+$score ' + player.modifiers.map(modifier -> '${String.fromCharCode(modifier.charCode)}$score ').join("");
+		writeText(scoreBoard.position.x, scoreBoard.modsRow, modText, scoreBoard.width);
 	}
 }
 
@@ -378,6 +401,8 @@ class ScoreBoard {
 
 	public var nameRow:Int;
 	public var scoreRow:Int;
+	public var modsRow:Int;
+	public var turnIndicatorRow:Int;
 }
 
 @:structInit
