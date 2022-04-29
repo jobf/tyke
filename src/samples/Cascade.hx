@@ -16,8 +16,10 @@ class ScreenGeometry {
 	public var displayPixelsWide:Int;
 	public var displayPixelsHigh:Int;
 
-	public var boundaryColumnLeft:Int;
-	public var boundaryColumnRight:Int;
+	public var playBoundsLeft:Int;
+	public var playBoundsRight:Int;
+	public var playBoundsTop:Int;
+	public var playBoundsBottom:Int;
 }
 
 class Cascade extends GlyphLoop {
@@ -28,19 +30,20 @@ class Cascade extends GlyphLoop {
 
 	function getInitFor(char:String, fg:Int, bg:Int, geometry:ScreenGeometry):(Int, Int) -> GlyphModel {
 		final options:String = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
-		final maxIndex:Int = options.length;
+		final reduceAvailableCharsBy = 17;
+		final maxIndex:Int = options.length - reduceAvailableCharsBy;
 
 		var defaultFg = fg;
 		return (col, row) -> {
 			var x = col * text.fontStyle.width;
 			var y = row * text.fontStyle.height;
 			var charCode:Int = " ".charCodeAt(0);
-			if (col < geometry.boundaryColumnLeft || col > geometry.boundaryColumnRight) {
+			if (col < geometry.playBoundsLeft || col > geometry.playBoundsRight) {
 				charCode = " ".charCodeAt(0);
-			} else if (row < 3) {
+			} else if (row < geometry.playBoundsTop) {
 				charCode = "0".charCodeAt(0);
 				fg = 7;
-			} else if (row < 12) {
+			} else if (row < geometry.playBoundsBottom) {
 				fg = defaultFg;
 				charCode = options.charCodeAt(randomInt(maxIndex) - 1);
 			}
@@ -58,7 +61,7 @@ class Cascade extends GlyphLoop {
 	function begin() {
 		final numColumns = 19;
 		// final numRows = 16;
-		var numColumnsInDisplay = Math.ceil(display.width / text.fontStyle.width) ;
+		var numColumnsInDisplay = Math.ceil(display.width / text.fontStyle.width);
 		var border = numColumnsInDisplay - numColumns;
 		var boundaryLeft = Std.int(border * 0.5);
 		var boundarRight = numColumnsInDisplay - boundaryLeft;
@@ -68,9 +71,12 @@ class Cascade extends GlyphLoop {
 			displayColumns: numColumnsInDisplay,
 			displayPixelsWide: display.width,
 			displayPixelsHigh: display.height,
-			boundaryColumnRight: boundarRight,
-			boundaryColumnLeft: boundaryLeft
+			playBoundsRight: boundarRight,
+			playBoundsLeft: boundaryLeft,
+			playBoundsTop: 3,
+			playBoundsBottom: 12
 		}
+
 		var config:GlyphLayerConfig = {
 			numColumns: geometry.displayColumns,
 			numRows: geometry.displayRows,
@@ -90,7 +96,7 @@ class Cascade extends GlyphLoop {
 			if (isCascading)
 				return;
 			var pointUnderMouse:Point = cascade.screenToGrid(x, y, playWidth, playHeight);
-			// if (pointUnderMouse.x < geometry.boundaryColumnLeft || pointUnderMouse.x > geometry.boundaryColumnRight)
+			// if (pointUnderMouse.x < geometry.playBoundsLeft || pointUnderMouse.x > geometry.playBoundsRight)
 			// 	// mouse click is out of clickable area
 			// 	return;
 
@@ -162,15 +168,17 @@ class CacadeArea {
 class CascadeLayer extends GlyphLayer {
 	public function new(config:GlyphLayerConfig, fontProgram:FontProgram<FontStyle>, geometry:ScreenGeometry) {
 		super(config, fontProgram);
+
 		this.geometry = geometry;
 		// todo - why is this this.geometry.playableColumnsWidth + 2 ?
-		clickableIndexes = indexesInSection(this.geometry.boundaryColumnLeft, 0, this.geometry.playableColumnsWidth + 2, this.geometry.displayRows - 1);
-		player1 = setupPlayer("Player 1");
-		player2 = setupPlayer("Player 2");
-		player1ScoreBoard = setupScoreBoard(0, 2, this.geometry.boundaryColumnLeft);
-		player2ScoreBoard = setupScoreBoard(this.geometry.boundaryColumnRight + 1, 2, this.geometry.boundaryColumnLeft);
-		writeText(player1ScoreBoard.position.x, player1ScoreBoard.nameRow, player1.name, player1ScoreBoard.width);
-		writeText(player2ScoreBoard.position.x, player2ScoreBoard.nameRow, player2.name, player2ScoreBoard.width);
+		clickableIndexes = indexesInSection(this.geometry.playBoundsLeft, this.geometry.playBoundsTop, this.geometry.playableColumnsWidth
+			+ 2,
+			this.geometry.playBoundsBottom
+			- this.geometry.playBoundsTop
+			- 1);
+
+		initModifiers();
+		initPlayers();
 	}
 
 	function setupPlayer(name:String):Player {
@@ -208,7 +216,7 @@ class CascadeLayer extends GlyphLayer {
 
 	public function clearAllMatching(charCode:Int) {
 		var numRemoved = 0;
-		for(index in clickableIndexes){
+		for (index in clickableIndexes) {
 			var cell = cells[index];
 			if (cell.char == charCode) {
 				cell.char = emptyChar;
@@ -233,9 +241,22 @@ class CascadeLayer extends GlyphLayer {
 		}
 	];
 
-	function moved(from:GlyphModel, column:Int, row:Int):Bool {
+	final modAdd:Int = "+".charCodeAt(0);
+	final modRemove:Int = "-".charCodeAt(0);
+
+	function moved(from:GlyphModel, column:Int, row:Int, isPlayerOnLeft:Bool):Bool {
 		var to = get(column, row);
-		if (to.char == emptyChar) {
+		var destinationIsEmpty = to.char == emptyChar;
+		var destinationIsModifier = to.char == modAdd || to.char == modRemove;
+		if (destinationIsEmpty || destinationIsModifier) {
+			if (destinationIsModifier) {
+				var player = isPlayerOnLeft ? player1 : player2;
+				var modifyBy = to.char == modAdd ? 1 : -1;
+				player.modifiers.push({
+					scoreMod: i -> i * modifyBy,
+					charCode: to.char
+				});
+			}
 			to.char = from.char;
 			to.paletteIndexFg = from.paletteIndexFg;
 			from.char = emptyChar;
@@ -246,7 +267,7 @@ class CascadeLayer extends GlyphLayer {
 	}
 
 	public function isInPlayableBounds(column:Int, row:Int):Bool {
-		return column >= geometry.boundaryColumnLeft && row >= 0 && column <= geometry.boundaryColumnRight && row < numRows;
+		return column >= geometry.playBoundsLeft && row >= 0 && column <= geometry.playBoundsRight && row < numRows;
 	}
 
 	var player1:Player;
@@ -254,7 +275,7 @@ class CascadeLayer extends GlyphLayer {
 	var player2:Player;
 	var player2ScoreBoard:ScoreBoard;
 
-	public function changed(isPlayerOnLeft:Bool = true):Bool {
+	public function changed(isPlayerOnLeft:Bool):Bool {
 		var somethingMoved = false;
 		final isReversed = true;
 		final updatingIndidivually = true;
@@ -271,7 +292,7 @@ class CascadeLayer extends GlyphLayer {
 						if (!isInPlayableBounds(column, row)) {
 							continue;
 						}
-						if (moved(each, column, row)) {
+						if (moved(each, column, row, isPlayerOnLeft)) {
 							somethingMoved = true;
 							break;
 						}
@@ -281,7 +302,7 @@ class CascadeLayer extends GlyphLayer {
 					var groundedDirection = isPlayerOnLeft ? -1 : 1;
 					var column = c + groundedDirection;
 					var row = r;
-					var isExiting = column >= geometry.boundaryColumnRight || column <= geometry.boundaryColumnLeft;
+					var isExiting = column >= geometry.playBoundsRight || column <= geometry.playBoundsLeft;
 					if (isExiting) {
 						// trace('score!');
 						each.char = emptyChar;
@@ -290,9 +311,18 @@ class CascadeLayer extends GlyphLayer {
 						var scoreBoard = isPlayerOnLeft ? player1ScoreBoard : player2ScoreBoard;
 						var score = 5;
 						player.score += score;
+						var modText = player.modifiers.map(modifier -> String.fromCharCode(modifier.charCode)).join(" ");
+						writeText(scoreBoard.position.x, 6, modText, scoreBoard.width);
+						trace('${player.name} $modText');
+						for (i => mod in player.modifiers) {
+							player.score += mod.scoreMod(score);
+							// writeText(0, 0, String.fromCharCode(mod.charCode), scoreBoard.width);
+							// trace(scoreBoard.position.x);
+							// writeText(scoreBoard.position.x + (i * 2), scoreBoard.position.y, String.fromCharCode(mod.charCode), scoreBoard.width);
+						}
 						writeText(scoreBoard.position.x, scoreBoard.position.y, '${player.score}', scoreBoard.width);
 					} else {
-						if (moved(each, column, row)) {
+						if (moved(each, column, row, isPlayerOnLeft)) {
 							// trace('exiting');
 							somethingMoved = true;
 						}
@@ -308,6 +338,27 @@ class CascadeLayer extends GlyphLayer {
 	var geometry:ScreenGeometry;
 
 	var clickableIndexes:Array<Int>;
+
+	function initModifiers() {
+		var top = this.geometry.playBoundsTop + 1;
+		var height = this.geometry.playBoundsBottom - top - 1;
+		var vailidModifierIndexes = indexesInSection(this.geometry.playBoundsLeft, top, this.geometry.playableColumnsWidth + 2, height);
+		for (mod in [modRemove, modAdd, modRemove, modAdd]) {
+			// for(mod in ["-","+","-","+","*","*"]){
+			var index = vailidModifierIndexes[randomInt(vailidModifierIndexes.length)];
+			cells[index].char = mod;
+			cells[index].paletteIndexFg = 15;
+		}
+	}
+
+	function initPlayers() {
+		player1 = setupPlayer("Player 1");
+		player2 = setupPlayer("Player 2");
+		player1ScoreBoard = setupScoreBoard(0, 2, this.geometry.playBoundsLeft);
+		player2ScoreBoard = setupScoreBoard(this.geometry.playBoundsRight + 1, 2, this.geometry.playBoundsLeft);
+		writeText(player1ScoreBoard.position.x, player1ScoreBoard.nameRow, player1.name, player1ScoreBoard.width);
+		writeText(player2ScoreBoard.position.x, player2ScoreBoard.nameRow, player2.name, player2ScoreBoard.width);
+	}
 }
 
 typedef PointsModifier = Int->Int;
@@ -316,7 +367,7 @@ typedef PointsModifier = Int->Int;
 class Player {
 	public var name:String;
 	public var score:Int;
-	public var modifiers:Array<PointsModifier>;
+	public var modifiers:Array<Modifier>;
 }
 
 @:structInit
@@ -326,4 +377,10 @@ class ScoreBoard {
 
 	public var nameRow:Int;
 	public var scoreRow:Int;
+}
+
+@:structInit
+class Modifier {
+	public var charCode:Int;
+	public var scoreMod:PointsModifier;
 }
