@@ -1,5 +1,6 @@
 package tyke.jam;
 
+import haxe.ds.Vector;
 import lime.media.AudioBuffer;
 import lime.app.Future;
 import tyke.Loop.CountDown;
@@ -9,7 +10,7 @@ import lime.media.AudioSource;
 class SoundManager {
 	var musicFadeOutCountDown:CountDown;
 	var music:AudioSource;
-	var sounds:Map<Int, AudioSource>;
+	var sounds:Map<Int, Sound>;
 	var isStoppingMusic:Bool = false;
 	var loadingMusic:Future<AudioBuffer>;
 
@@ -51,10 +52,7 @@ class SoundManager {
 			var soundPath = soundPaths[key];
 			var loadingSound = Assets.loadAudioBuffer(soundPath);
 			loadingSound.onComplete(buffer -> {
-				var offset = 0;
-				var length = null;
-				var loops = 1;
-				sounds[key] = new AudioSource(buffer, offset, length, loops);
+				sounds[key] = new Sound(5, buffer);
 				trace('init sound $soundPath');
 			});
 			loadingSound.onError(d -> {
@@ -99,6 +97,43 @@ class SoundManager {
 			music.stop();
 			isStoppingMusic = false;
 			isMusicPlaying = false;
+		}
+	}
+}
+
+class Sound{
+	var channels:Vector<Channel>;
+	public function new(numChannels:Int, buffer:AudioBuffer){
+		channels = new Vector<Channel>(numChannels);
+		for(i in 0...numChannels){
+			channels[i] = new Channel(buffer);
+		}
+	}
+
+	public function play(){
+		for(c in channels){
+			if(!c.isPlaying){
+				c.play();
+				break;
+			}
+		}
+	}
+}
+
+class Channel{
+	public var isPlaying(default, null):Bool;
+	var source:AudioSource;
+	public function new(buffer:AudioBuffer){
+		var offset = 0;
+		var length = null;
+		var loops = 1;
+		this.source = new AudioSource(buffer, offset, length, loops);
+		isPlaying = false;
+	}
+
+	public function play(){
+		if(!isPlaying){
+			source.play();
 		}
 	}
 }
