@@ -110,14 +110,17 @@ class App extends Application {
 		return false;
 	}
 
-	public function changeScene(nextScene:Scene) {
+	public function changeScene(nextScene:Scene, shouldClearPoeteView:Bool = false) {
 		log('changeScene');
-
 		if (scene != null) {
+			shouldClearPoeteView = true;
 			scene.destroy();
+		}
+		if (shouldClearPoeteView) {
 			core.peoteView.stop();
 			core.peoteView.removeDisplay(core.display);
 			setupCore();
+			log('reset PeoteView');
 		}
 		scene = nextScene;
 		scene.create();
@@ -142,7 +145,8 @@ class App extends Application {
 	override function onPreloadComplete() {
 		// super.onPreloadComplete();
 		log('onPreloadComplete');
-		changeScene(core.config.initScene(this));
+		final shouldClearPeoteView = true;
+		changeScene(core.config.initScene(this), shouldClearPeoteView);
 		hasStarted = true;
 		isUpdating = true;
 		log('scene initialized');
@@ -281,9 +285,17 @@ class App extends Application {
 
 class PreloaderUi {
 	var core:AppCore;
+	var progressRectangle:Rectangle;
+	var buffer:Buffer<Rectangle>;
 
 	public function new(core:AppCore) {
 		this.core = core;
+		buffer = new Buffer<Rectangle>(1);
+		var program = new Program(buffer);
+		this.core.display.addProgram(program);
+		var progressColor = Color.MAGENTA;
+		progressRectangle = new Rectangle(0, 0, core.config.screenWidth, core.config.screenHeight, 0.0, progressColor);
+		buffer.addElement(progressRectangle);
 	}
 
 	public function onPreloadProgress(loaded:Int, total:Int) {}
@@ -327,7 +339,6 @@ class AppCore {
 		return {display: display, texture: framebufferTexture};
 	}
 }
-
 
 class PaletteExtensions {
 	public static function toRGBA(rgb:Array<Int>):Array<Color> {
