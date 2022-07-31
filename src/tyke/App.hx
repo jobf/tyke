@@ -294,11 +294,17 @@ class PreloaderUi {
 		var program = new Program(buffer);
 		this.core.display.addProgram(program);
 		var progressColor = Color.MAGENTA;
-		progressRectangle = new Rectangle(0, 0, core.config.screenWidth, core.config.screenHeight, 0.0, progressColor);
+		var completeWidth = 0;
+		progressRectangle = new Rectangle(0, 0, completeWidth, core.config.screenHeight, 0.0, progressColor);
 		buffer.addElement(progressRectangle);
 	}
 
-	public function onPreloadProgress(loaded:Int, total:Int) {}
+	public function onPreloadProgress(loaded:Int, total:Int) {
+		var percentageComplete = loaded / total;
+		var completeWidth = core.config.screenWidth * percentageComplete;
+		progressRectangle.w = Std.int(completeWidth);
+		buffer.updateElement(progressRectangle);
+	}
 }
 
 @:structInit
