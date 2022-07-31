@@ -13,6 +13,7 @@ class SoundManager {
 	var sounds:Map<Int, Sound>;
 	var isStoppingMusic:Bool = false;
 	var loadingMusic:Future<AudioBuffer>;
+	var isUpdating:Bool;
 
 	public var isMusicPlaying(default, null):Bool;
 
@@ -20,6 +21,7 @@ class SoundManager {
 		musicFadeOutCountDown = new CountDown(0.2, () -> reduceMusicGain(), true);
 		sounds = [];
 		trace('initialized SoundManager');
+		isUpdating = true;
 	}
 
 	/**
@@ -47,8 +49,8 @@ class SoundManager {
 	/**
 		can only be called after lime preload complete
 	**/
-	public function loadSounds(soundPaths:Map<Int, String>){
-		for(key in soundPaths.keys()){
+	public function loadSounds(soundPaths:Map<Int, String>) {
+		for (key in soundPaths.keys()) {
 			var soundPath = soundPaths[key];
 			var loadingSound = Assets.loadAudioBuffer(soundPath);
 			loadingSound.onComplete(buffer -> {
@@ -65,8 +67,8 @@ class SoundManager {
 		}
 	}
 
-	public function playSound(key:Int){
-		if(sounds.exists(key)){
+	public function playSound(key:Int) {
+		if (sounds.exists(key)) {
 			sounds[key].play();
 		}
 	}
@@ -80,8 +82,10 @@ class SoundManager {
 	}
 
 	public function update(elapsedSeconds:Float) {
-		if (isStoppingMusic) {
-			musicFadeOutCountDown.update(elapsedSeconds);
+		if (isUpdating) {
+			if (isStoppingMusic) {
+				musicFadeOutCountDown.update(elapsedSeconds);
+			}
 		}
 	}
 
@@ -99,20 +103,33 @@ class SoundManager {
 			isMusicPlaying = false;
 		}
 	}
+
+	public function pause(willPauseAudio:Bool) {
+		isUpdating = !willPauseAudio;
+		if (isMusicPlaying) {
+			if (willPauseAudio) {
+				music.pause();
+			}
+			else{
+				music.play();
+			}
+		}
+	}
 }
 
-class Sound{
+class Sound {
 	var channels:Vector<Channel>;
-	public function new(numChannels:Int, buffer:AudioBuffer){
+
+	public function new(numChannels:Int, buffer:AudioBuffer) {
 		channels = new Vector<Channel>(numChannels);
-		for(i in 0...numChannels){
+		for (i in 0...numChannels) {
 			channels[i] = new Channel(buffer);
 		}
 	}
 
-	public function play(){
-		for(c in channels){
-			if(!c.isPlaying){
+	public function play() {
+		for (c in channels) {
+			if (!c.isPlaying) {
 				c.play();
 				break;
 			}
@@ -120,10 +137,12 @@ class Sound{
 	}
 }
 
-class Channel{
+class Channel {
 	public var isPlaying(default, null):Bool;
+
 	var source:AudioSource;
-	public function new(buffer:AudioBuffer){
+
+	public function new(buffer:AudioBuffer) {
 		var offset = 0;
 		var length = null;
 		var loops = 1;
@@ -131,8 +150,8 @@ class Channel{
 		isPlaying = false;
 	}
 
-	public function play(){
-		if(!isPlaying){
+	public function play() {
+		if (!isPlaying) {
 			source.play();
 		}
 	}

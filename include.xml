@@ -9,9 +9,13 @@
 	<haxelib name="json2object" />
 	<haxelib name="peote-view" />
 	<haxelib name="peote-text" />
-	<haxelib name="ob.gum" />
 	<haxelib name="hxmath" />
 	<haxelib name="echo" />
 	<haxelib name="deepnightLibs" />
 	<haxelib name="ldtk-haxe-api" />
+<!-- 
+	<assets path="embedded" embed="true">
+		<image path="assets/5x5-alpha-numeric.png" id="5x5font" />
+	</assets> -->
+
 </project>

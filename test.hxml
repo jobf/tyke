@@ -5,7 +5,6 @@
 -lib json2object
 -lib peote-view
 -lib peote-text
--lib ob.gum
 -lib ob.parameters
 -lib ob.seq
 -lib ob.traxe
@@ -16,3 +15,4 @@
 -main test.RunTests
 --interp
 
+--macro echo.Macros.add_data('uiEntity','tyke.jam.EchoUi.UiEntity')

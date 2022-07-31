@@ -1,5 +1,6 @@
 package tyke.jam;
 
+import tyke.Glyph;
 import peote.text.Line;
 import tyke.Graphics;
 import echo.Body;

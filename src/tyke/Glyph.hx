@@ -16,6 +16,18 @@ class GlyphLoopConfig {
 	public var numCellsHigh:Int;
 }
 
+class FontStyle {
+	public var color:Color = Color.LIME;
+	public var bgColor:Color = Color.BLACK;
+	public var width:Float = 16;
+	public var height:Float = 16;
+	public var zIndex:Int = 0;
+	public var tilt:Float = 0.0;
+	public var weight:Float = 0.5;
+
+	public function new() {}
+}
+
 class CellWorks {
 	public static function randomise(c:Int, r:Int, cell:GlyphModel, palette:Palette, isColorRandom:Bool = true, isCharRandom:Bool = true) {
 		if (isColorRandom) {

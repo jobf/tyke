@@ -1,33 +1,35 @@
 package tyke;
 
+import tyke.App;
 import tyke.Keyboard;
 import tyke.Echo;
 import tyke.Graphics;
+import tyke.Glyph;
 
 class Stage {
-	var display:Display;
+	var core:AppCore;
+
 	public var program(default, null):Program;
+
 	var globalFrameBuffer:FrameBuffer;
-	var coreLoop:PeoteViewLoop;
 	var sprites:Array<SpriteRenderer> = [];
 	var layers:Map<String, Layer> = [];
 	var view:ViewElement;
 	var buffer:Buffer<ViewElement>;
-	
+
 	public var width(default, null):Int;
 	public var height(default, null):Int;
 
-	public function new(display:Display, coreLoop:PeoteViewLoop, ?width:Int, ?height:Int) {
-		this.display = display;
-		this.coreLoop = coreLoop;
-		this.width = width == null ? display.width : width;
-		this.height = height == null ? display.height : height;
+	public function new(core:AppCore, width:Int, height:Int) {
+		this.core = core;
+		this.width = width;
+		this.height = height;
 		buffer = new Buffer<ViewElement>(1);
 		program = new Program(buffer);
 		program.setFragmentFloatPrecision("high");
 		program.alphaEnabled = true;
 		program.discardAtAlpha(null);
-		display.addProgram(program);
+		core.display.addProgram(program);
 		view = new ViewElement(0, 0, this.width, this.height);
 		buffer.addElement(view);
 		final isGlobalFrameBufferPersistent = false;
@@ -44,7 +46,7 @@ class Stage {
 	}
 
 	function makeFrameBuffer(name:String, isPersistent:Bool):FrameBuffer {
-		var frameBuffer = coreLoop.getFrameBufferDisplay(display.x, display.y, width, height, isPersistent);
+		var frameBuffer = core.getFrameBufferDisplay(core.display.x, core.display.y, width, height, isPersistent);
 		chainFrameBuffer(frameBuffer, name);
 		return frameBuffer;
 	}
@@ -56,7 +58,7 @@ class Stage {
 		return layer;
 	}
 
-	function initGraphicsBuffer(name:String, buffer:IHaveGraphicsBuffer, isPersistentFrameBuffer:Bool, isIndividualFrameBuffer:Bool ) {
+	function initGraphicsBuffer(name:String, buffer:IHaveGraphicsBuffer, isPersistentFrameBuffer:Bool, isIndividualFrameBuffer:Bool) {
 		var layer = createLayer(name, isPersistentFrameBuffer, !isIndividualFrameBuffer);
 		layer.registerGraphicsBuffer(buffer);
 		layer.addProgramToFrameBuffer(buffer.program);
@@ -75,18 +77,20 @@ class Stage {
 		return frames;
 	}
 
-	public function createSpriteRendererLayer(name:String, image:Image, frameSize:Int, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false):SpriteRenderer {
+	public function createSpriteRendererLayer(name:String, image:Image, frameSize:Int, isPersistentFrameBuffer:Bool = false,
+			isIndividualFrameBuffer:Bool = false):SpriteRenderer {
 		var frames = new SpriteRenderer(image, frameSize);
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer);
 		return frames;
 	}
 
-	public function createGlyphRendererLayer(name:String, font:Font<FontStyle>, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false):GlyphRenderer {
+	public function createGlyphRendererLayer(name:String, font:Font<FontStyle>, isPersistentFrameBuffer:Bool = false,
+			isIndividualFrameBuffer:Bool = false):GlyphRenderer {
 		var frames = new GlyphRenderer(font);
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer);
 		return frames;
 	}
-	
+
 	public function updateGraphicsBuffers() {
 		for (layer in layers) {
 			layer.updateGraphicsBuffers();
@@ -102,10 +106,10 @@ class Stage {
 	}
 
 	public function setZoom(z:Int) {
-		display.set_zoom(z);
+		core.display.set_zoom(z);
 	}
-	
-	public function setScroll(x:Int, y:Int){
+
+	public function setScroll(x:Int, y:Int) {
 		view.x = x;
 		view.y = y;
 		buffer.update();
@@ -121,9 +125,8 @@ class Stage {
 	}
 
 	public function getTime():Float {
-		return coreLoop.peoteView.get_time();
+		return core.peoteView.get_time();
 	}
-
 }
 
 class ViewElement implements Element {
@@ -146,7 +149,7 @@ typedef IsComplete = Bool;
 @:structInit
 class GranularAction {
 	public var isEnabled:Bool;
-	public var perform:Tick->IsComplete;
+	public var perform:Int->IsComplete;
 }
 
 class Tweens {
@@ -156,7 +159,7 @@ class Tweens {
 		actions = [];
 	}
 
-	public function update(tick:Tick) {
+	public function update(tick:Int) {
 		for (a in actions) {
 			if (a.isEnabled) {
 				a.isEnabled = !a.perform(tick);
@@ -173,7 +176,7 @@ class Tweens {
 }
 
 @:structInit
-class AnimationConfig{
+class AnimationConfig {
 	public var tileIndexes:Array<Int>;
 	public var speed:Int;
 	public var isLooped:Bool;
@@ -183,6 +186,7 @@ class Animation {
 	public var frameCollections(default, null):Map<Int, AnimationConfig>;
 	public var frameIndex(default, null):Int;
 	public var currentAnimation(default, null):Int;
+
 	var spriteSheetColumns:Int;
 
 	var onAdvance:Animation->Void;
@@ -195,10 +199,10 @@ class Animation {
 		this.onAdvance = onAdvance;
 	}
 
-	public function defineFrames(key:Int, rowIndex:Int, columnIndex:Int, numFrames:Int,  isLooped:Bool = true, speed:Int=1){
+	public function defineFrames(key:Int, rowIndex:Int, columnIndex:Int, numFrames:Int, isLooped:Bool = true, speed:Int = 1) {
 		var firstFrame = (rowIndex * spriteSheetColumns) + columnIndex;
 		var lastFrame = firstFrame + numFrames;
-		var config :AnimationConfig = {
+		var config:AnimationConfig = {
 			tileIndexes: [for (i in firstFrame...lastFrame) i],
 			speed: speed,
 			isLooped: isLooped
@@ -212,9 +216,8 @@ class Animation {
 			if (onAdvance != null) {
 				onAdvance(this);
 			}
-			if(frameCollections[currentAnimation].isLooped){
-
-				if(frameIndex < frameCollections[currentAnimation].tileIndexes.length)
+			if (frameCollections[currentAnimation].isLooped) {
+				if (frameIndex < frameCollections[currentAnimation].tileIndexes.length)
 					frameIndex++;
 				frameIndex = frameIndex % frameCollections[currentAnimation].tileIndexes.length;
 			}
@@ -239,7 +242,6 @@ class Animation {
 	}
 }
 
-
 class Camera {
 	public var body(default, null):Body;
 
@@ -254,9 +256,9 @@ class Camera {
 			x: 0,
 			y: 0,
 		});
-		
+
 		body.on_move = onMove;
 	}
-	
+
 	var onMove:(x:Float, y:Float) -> Void;
 }

@@ -18,10 +18,7 @@ import peote.text.FontProgram;
 import peote.text.Glyph;
 import peote.view.Program;
 import peote.view.Texture;
-import ob.gum.Core;
-import ob.gum.backends.PeoteView;
-import ob.gum.backends.Lime;
 import echo.math.Vector2;
 
-using ob.gum.backends.PeoteView.PaletteExtensions;
+using tyke.App.PaletteExtensions;
 using tyke.Loop.Extensions;

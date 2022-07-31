@@ -30,9 +30,6 @@ haxelib git input2action https://github.com/maitag/input2action.git
 # tile maps
 haxelib git deepnightLibs https://github.com/deepnight/deepnightLibs.git
 haxelib git ldtk-haxe-api https://github.com/deepnight/ldtk-haxe-api.git
-
-# glue
-haxelib git ob.gum https://github.com/jobf/ob.gum.git
 ```
 
 ### Install this lib

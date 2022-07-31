@@ -1,6 +1,7 @@
 package tyke;
 
 import tyke.Loop;
+import tyke.Glyph;
 
 interface IHaveGraphicsBuffer {
 	public function updateGraphicsBuffers():Void;
@@ -11,6 +12,12 @@ enum Geometry {
 	RECT;
 	CIRCLE;
 	POLYGON(numSides:Int);
+}
+
+@:structInit
+class FrameBuffer {
+	public var texture:Texture;
+	public var display:Display;
 }
 
 @:structInit
