@@ -1,5 +1,6 @@
 package tyke.jam;
 
+import tyke.App.Tyke;
 import tyke.Loop.PhysicalStageLoop;
 
 class SceneManager extends PhysicalStageLoop {
@@ -20,18 +21,18 @@ class SceneManager extends PhysicalStageLoop {
 		}
 		setupPeoteView();
 		initWorldAndStage();
-        scene = nextScene;
-        scene.create();
+		scene = nextScene;
+		scene.create();
 	}
 
 	public function resetScene() {
 		changeScene(scene);
 	}
 
-    override function onUpdate(deltaMs:Int) {
-        super.onUpdate(deltaMs);
-        scene.update(deltaMs / 1000);
-    }
+	override function onUpdate(deltaMs:Int) {
+		super.onUpdate(deltaMs);
+		scene.update(deltaMs / 1000);
+	}
 
 	override function onMouseMove(x:Float, y:Float) {
 		super.onMouseMove(x, y);
@@ -55,13 +56,21 @@ class SceneManager extends PhysicalStageLoop {
 }
 
 class Scene {
-	var sceneManager:SceneManager;
-	public function new(sceneManager:SceneManager){
-		this.sceneManager = sceneManager;
+	var tyke:Tyke;
+
+	public function new(tyke:Tyke) {
+		this.tyke = tyke;
 	}
-	public function create(){}
-	public function destroy(){}
-	public function update(elapsedSeconds:Float){}
+
+	public function create() {
+		tyke.core.log('Scene.create');
+	}
+
+	public function destroy() {
+		tyke.core.log('Scene.destroy');
+	}
+
+	public function update(elapsedSeconds:Float) {}
 
 	public function onMouseMove(x:Float, y:Float) {}
 
@@ -70,4 +79,20 @@ class Scene {
 	public function onMouseUp(x:Float, y:Float, button:MouseButton) {}
 
 	public function onMouseScroll(deltaX:Float, deltaY:Float, wheelMode:MouseWheelMode) {}
+
+	public function onWindowFocusIn() {}
+
+	public function onWindowFocusOut() {}
+
+	public function onWindowLeave() {}
+
+	public function onWindowFullscreen() {}
+
+	public function onWindowMinimize() {}
+
+	public function onWindowRestore() {}
+
+	public function onWindowResize(width:Int, height:Int) {}
+
+	public function onMouseWheel(deltaX:Float, deltaY:Float, deltaMode:MouseWheelMode) {}
 }
