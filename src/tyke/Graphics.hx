@@ -276,7 +276,7 @@ class Rectangle implements Element {
 
 	public static var ColorFormula = "";
 
-	public function new(positionX:Float = 0, positionY:Float = 0, width:Float, height:Float, rotation:Float = 3.0, color:Int = 0xffffffFF) {
+	public function new(positionX:Float = 0, positionY:Float = 0, width:Float, height:Float, rotation:Float = 0.0, color:Int = 0xffffffFF) {
 		this.x = positionX;
 		this.y = positionY;
 		this.w = width;
