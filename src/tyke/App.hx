@@ -23,6 +23,20 @@ class App extends Application {
 		hasStarted = false;
 		isUpdating = false;
 
+		#if html5
+		js.Browser.document.onkeypress = (e) -> {
+			e.preventDefault();
+		};
+
+		js.Browser.document.onkeydown = (e) -> {
+			e.preventDefault();
+		};
+
+		js.Browser.document.onkeyup = (e) -> {
+			e.preventDefault();
+		};
+		#end
+
 		frames = {
 			totalPassed: 0,
 			totalElapsedMs: 0,
@@ -50,15 +64,19 @@ class App extends Application {
 		// super.onWindowCreate();
 		log('onWindowCreate');
 
-		setupCore();
+		setupCore(config.backgroundColor);
 
 		preloaderUi = new PreloaderUi(core);
+
+		// window.onDropFile.add(s -> {
+		// 	trace('dropped file $s');
+		// });
 	}
 
-	inline function setupCore() {
+	inline function setupCore(backgroundColor:Color) {
 		core = {
 			peoteView: new PeoteView(window),
-			display: new Display(0, 0, config.screenWidth, config.screenHeight, config.backgroundColor),
+			display: new Display(0, 0, config.screenWidth, config.screenHeight, backgroundColor),
 			config: config,
 			log: log
 		};
@@ -116,14 +134,19 @@ class App extends Application {
 			shouldClearPoeteView = true;
 			scene.destroy();
 		}
+
+		scene = nextScene;
 		if (shouldClearPoeteView) {
 			core.peoteView.stop();
 			core.peoteView.removeDisplay(core.display);
-			setupCore();
+			setupCore(scene.backgroundColor);
 			log('reset PeoteView');
 		}
-		scene = nextScene;
 		scene.create();
+	}
+
+	public function resetScene() {
+		changeScene(scene);
 	}
 
 	public function onPauseStart() {
@@ -141,6 +164,11 @@ class App extends Application {
 
 		scene.onPauseEnd();
 	}
+
+	// override function onWindowDropFile(file:String) {
+	// 	super.onWindowDropFile(file);
+	// 	trace('dropped file $file');
+	// }
 
 	override function onPreloadComplete() {
 		// super.onPreloadComplete();
@@ -164,8 +192,9 @@ class App extends Application {
 		if (!hasStarted)
 			return;
 
-		// resume update when has focus
+		// resume update when has focus?
 		isUpdating = true;
+		onPauseEnd();
 
 		scene.onWindowFocusIn();
 	}
@@ -176,8 +205,9 @@ class App extends Application {
 		if (!hasStarted)
 			return;
 
-		// pause update when has focus
+		// pause update when lost focus?
 		isUpdating = false;
+		onPauseStart();
 		scene.onWindowFocusOut();
 	}
 
@@ -187,7 +217,28 @@ class App extends Application {
 		if (!hasStarted)
 			return;
 
+		// onPauseStart();
 		scene.onWindowLeave();
+	}
+
+	override function onWindowActivate() {
+		super.onWindowActivate();
+		log('onWindowActivate');
+		if (!hasStarted)
+			return;
+
+		onPauseEnd();
+		// scene.onWindowLeave();
+	}
+
+	override function onWindowDeactivate() {
+		// super.onWindowDeActivate();
+		log('onWindowDeactivate');
+		if (!hasStarted)
+			return;
+
+		onPauseStart();
+		// scene.onWindowLeave();
 	}
 
 	override function onWindowFullscreen() {
