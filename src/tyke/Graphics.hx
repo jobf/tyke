@@ -344,6 +344,8 @@ class Sprite implements Element {
 	/** element height (can be negative when y is flipped, e.g. 400 would be -400)**/
 	@sizeY public var h:Int;
 
+	// @zIndex public var z:Int;
+
 	/** actual width (does not change when x is flipped )**/
 	public var width(default, null):Int;
 
@@ -399,6 +401,7 @@ class Sprite implements Element {
 		this.c = tint;
 		this.tile = tile;
 		this.visible = isVisible;
+		// z = 0;
 	}
 
 	public function shake(atTime:Float) {
