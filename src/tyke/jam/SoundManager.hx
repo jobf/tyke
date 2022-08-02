@@ -108,9 +108,11 @@ class SoundManager {
 		isUpdating = !willPauseAudio;
 		if (isMusicPlaying) {
 			if (willPauseAudio) {
+				trace('music.pause()');
 				music.pause();
 			}
 			else{
+				trace('music.play()');
 				music.play();
 			}
 		}
