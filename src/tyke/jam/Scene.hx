@@ -4,9 +4,25 @@ import tyke.App;
 
 class Scene {
 	var app:App;
+	var width:Int;
+	var height:Int;
 
-	public function new(app:App) {
+	public var backgroundColor(default, null):Color;
+
+	public function new(app:App, backgroundColor:Color = 0x000000ff, width:Int = 0, height:Int = 0) {
 		this.app = app;
+		this.backgroundColor = backgroundColor;
+		app.core.display.color = backgroundColor;
+		this.width = width;
+		this.height = height;
+		// if (width > 0) {
+		// 	app.core.config.screenWidth = width;
+		// 	// app.core.display.width = width;
+		// }
+		// if (height > 0) {
+		// 	app.core.config.screenHeight = height;
+		// 	// app.core.display.height = height;
+		// }
 	}
 
 	public function create() {
