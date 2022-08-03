@@ -21,7 +21,7 @@ class FrameBuffer {
 }
 
 @:structInit
-class RectangleGeometry{
+class RectangleGeometry {
 	public var x:Int;
 	public var y:Int;
 	public var width:Int;
@@ -195,14 +195,12 @@ class Shape implements Element {
 	}
 }
 
-
-
-
 class ShapeRenderer implements IHaveGraphicsBuffer {
 	var buffer:Buffer<Shape>;
 	var shapesInBuffer:Array<Shape>;
 
 	var _program:Program;
+
 	// var shapeInBuffer
 	public var program(get, null):Program;
 
@@ -237,7 +235,7 @@ class ShapeRenderer implements IHaveGraphicsBuffer {
 
 		buffer.addElement(shape);
 		shapesInBuffer.push(shape);
-		
+
 		return shape;
 	}
 
@@ -247,7 +245,7 @@ class ShapeRenderer implements IHaveGraphicsBuffer {
 	}
 
 	public function setVisibility(isVisible:Bool) {
-		for(shape in shapesInBuffer){
+		for (shape in shapesInBuffer) {
 			shape.visible = isVisible;
 		}
 	}
@@ -297,9 +295,9 @@ class Rectangle implements Element {
 	}
 }
 
-
 class RectangleRenderer implements IHaveGraphicsBuffer {
 	public var buffer(default, null):Buffer<Rectangle>;
+
 	var _program:Program;
 
 	public var program(get, null):Program;
@@ -329,7 +327,6 @@ class RectangleRenderer implements IHaveGraphicsBuffer {
 		buffer.update();
 	}
 }
-
 
 class Sprite implements Element {
 	// @posX public var x:Int;
@@ -374,8 +371,8 @@ class Sprite implements Element {
 
 	// params for blinking alpha
 	@custom("alpha") @varying @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
-	// @custom("alpha") @varying @constStart(0.0) @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 
+	// @custom("alpha") @varying @constStart(0.0) @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 	var OPTIONS = {alpha: true};
 
 	public static var InjectVertex = "
@@ -409,12 +406,11 @@ class Sprite implements Element {
 		// buffer.updateElement(this);
 	}
 
-	public function setFlashing(isFlashing:Bool){
+	public function setFlashing(isFlashing:Bool) {
 		// todo - adhere to previously set alpha
-		if(isFlashing){
+		if (isFlashing) {
 			alphaStart = 0.0;
-		}
-		else{
+		} else {
 			alphaStart = 1.0;
 		}
 	}
@@ -427,7 +423,9 @@ class Sprite implements Element {
 		// var adjustPosBy = isFlippedX ? width * 0.5 : 0;
 		w = width * flipBy;
 		// x += adjustPosBy;
-	}	public var visible(get, set):Bool;
+	}
+
+	public var visible(get, set):Bool;
 
 	function get_visible():Bool {
 		return c.alpha == 0;
@@ -437,23 +435,25 @@ class Sprite implements Element {
 		c.alpha = isVisible ? 0xff : 0x00;
 		return isVisible;
 	}
+
 	var debugElement:Shape;
-	public function attachDebug(debug:Shape){
+
+	public function attachDebug(debug:Shape) {
 		this.debugElement = debug;
 	}
 
-	public function move(x:Float, y:Float){
+	public function move(x:Float, y:Float) {
 		this.x = x;
 		this.y = y;
-		if(debugElement != null){
+		if (debugElement != null) {
 			debugElement.x = x;
 			debugElement.y = y;
 		}
 	}
 
-	public function rotate(r:Float){
+	public function rotate(r:Float) {
 		this.rotation = r;
-		if(debugElement != null){
+		if (debugElement != null) {
 			debugElement.rotation = r;
 		}
 	}
@@ -483,14 +483,15 @@ class SpriteRenderer implements IHaveGraphicsBuffer {
 		_program.injectIntoVertexShader(Sprite.InjectVertex, true);
 		_program.injectIntoFragmentShader(Sprite.InjectFragment, false);
 		_program.addTexture(spriteSheet, "base");
-		_program.setColorFormula( 'vec4(base.r, base.g, base.b, base.a * alpha)' );
+		_program.setColorFormula('vec4(base.r, base.g, base.b, base.a * alpha)');
 	}
 
-	public function makeSprite(x:Int, y:Int, spriteSize:Int, tileIndex:Int, framesIndex:Int = 0, isVisible:Bool = true):Sprite {
-		var sprite = new Sprite(x, y, spriteSize, spriteSize, tileIndex, isVisible);
+	public function makeSprite(x:Int, y:Int, spriteSize:Int, tileIndex:Int, framesIndex:Int = 0, isVisible:Bool = true, spriteHeight:Int = 0):Sprite {
+		var h = spriteHeight == 0 ? spriteSize : spriteHeight;
+		var sprite = new Sprite(x, y, spriteSize, h, tileIndex, isVisible);
 		sprite.alphaStart = 1.0;
 		sprite.timeAStart = 0.5;
-		sprite.timeADuration = 0.25; 
+		sprite.timeADuration = 0.25;
 		buffer.addElement(sprite);
 		return sprite;
 	}
