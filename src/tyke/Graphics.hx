@@ -370,7 +370,8 @@ class Sprite implements Element {
 	@posY @set("Position") @formula("y + shake(shakeAtTime, shakeFrequencyY, shakeDistanceY, shakeDurationY)") public var y:Float;
 
 	// params for blinking alpha
-	@custom("alpha") @varying @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
+	@custom("alpha") @varying @anim("A", "pingpong") public var alpha:Float;
+	// @custom("alpha") @varying @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 
 	// @custom("alpha") @varying @constStart(0.0) @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 	var OPTIONS = {alpha: true};
@@ -399,6 +400,8 @@ class Sprite implements Element {
 		this.tile = tile;
 		this.visible = isVisible;
 		// z = 0;
+		this.alphaStart = 1.0;
+		this.alphaEnd = 1.0;
 	}
 
 	public function shake(atTime:Float) {
