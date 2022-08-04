@@ -69,34 +69,30 @@ class Stage {
 		layers[name] = layer;
 	}
 
-	public function createShapeRenderLayer(name:String, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int=0, height:Int=0):ShapeRenderer {
+	public function createShapeRenderLayer(name:String, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):ShapeRenderer {
 		var frames = new ShapeRenderer();
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer, width, height);
 		return frames;
 	}
 
-	public function createRectangleRenderLayer(name:String, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int=0, height:Int=0):RectangleRenderer {
+	public function createRectangleRenderLayer(name:String, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):RectangleRenderer {
 		var frames = new RectangleRenderer();
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer, width, height);
 		return frames;
 	}
 
-	public function createSpriteRendererLayer(name:String, image:Image, frameSize:Int, isPersistentFrameBuffer:Bool = false,
-			isIndividualFrameBuffer:Bool = false, width:Int=0, height:Int=0):SpriteRenderer {
-		var frames = new SpriteRenderer(image, frameSize);
+	public function createSpriteRendererLayer(name:String, image:Image, frameSizeW:Int, frameSizeH:Int, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):SpriteRenderer {
+		var frames = new SpriteRenderer(image, frameSizeW, frameSizeH);
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer, width, height);
 		return frames;
 	}
 
-	public function createSpriteRendererFor(assetPath:String, numTilesWide:Int, isIndividualFrameBuffer:Bool = false, width:Int=0, height:Int=0):SpriteRenderer {
+	public function createSpriteRendererFor(assetPath:String, tileWidth:Int, tileHeight:Int, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):SpriteRenderer {
 		var image = Assets.getImage(assetPath);
-		var frameSize = Std.int(image.width / numTilesWide);
-		trace('frame size $frameSize $assetPath');
-		return createSpriteRendererLayer(assetPath, image, frameSize, isIndividualFrameBuffer, width, height);
+		return createSpriteRendererLayer(assetPath, image, tileWidth, tileHeight, isIndividualFrameBuffer, width, height);
 	}
 
-	public function createGlyphRendererLayer(name:String, font:Font<FontStyle>, isPersistentFrameBuffer:Bool = false,
-			isIndividualFrameBuffer:Bool = false, width:Int=0, height:Int=0):GlyphRenderer {
+	public function createGlyphRendererLayer(name:String, font:Font<FontStyle>, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):GlyphRenderer {
 		var frames = new GlyphRenderer(font);
 		initGraphicsBuffer(name, frames, isPersistentFrameBuffer, isIndividualFrameBuffer, width, height);
 		return frames;

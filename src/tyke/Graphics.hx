@@ -208,7 +208,7 @@ class ShapeRenderer implements IHaveGraphicsBuffer {
 		return _program;
 	}
 
-	public function new(bufferSize:Int = 256) {
+	public function new(bufferSize:Int = 1024) {
 		buffer = new Buffer<Shape>(bufferSize, bufferSize, true);
 		shapesInBuffer = [];
 		_program = new Program(buffer);
@@ -474,10 +474,10 @@ class SpriteRenderer implements IHaveGraphicsBuffer {
 		return _program;
 	}
 
-	public function new(image:Image, frameSize:Int, bufferSize:Int = 256) {
+	public function new(image:Image, frameSizeW:Int, frameSizeH:Int, bufferSize:Int = 1024) {
 		spriteSheet = new Texture(image.width, image.height);
-		spriteSheet.tilesX = Std.int(image.width / frameSize);
-		spriteSheet.tilesY = Std.int(image.height / frameSize);
+		spriteSheet.tilesX = Std.int(image.width / frameSizeW);
+		spriteSheet.tilesY = Std.int(image.height / frameSizeH);
 		spriteSheet.setImage(image, 0);
 		buffer = new Buffer<Sprite>(bufferSize, bufferSize, true);
 		_program = new Program(buffer);
