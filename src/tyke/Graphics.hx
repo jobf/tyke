@@ -428,6 +428,17 @@ class Sprite implements Element {
 		// x += adjustPosBy;
 	}
 
+
+	public var isFlippedY(default, null):Bool;
+
+	public function flipY(isFlipped:Bool) {
+		isFlippedY = isFlipped;
+		var flipBy = isFlippedY ? -1 : 1;
+		// var adjustPosBy = isFlippedX ? width * 0.5 : 0;
+		h = height * flipBy;
+		// x += adjustPosBy;
+	}
+
 	public var visible(get, set):Bool;
 
 	function get_visible():Bool {
