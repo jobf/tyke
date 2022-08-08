@@ -24,6 +24,15 @@ class SoundManager {
 		isUpdating = true;
 	}
 
+	var globalGain = 1.0;
+
+	public function mute(){
+		globalGain = 0;
+		if(music != null){
+			music.gain = globalGain;
+		}
+	}
+
 	/**
 		can only be called after lime preload complete
 	**/
@@ -32,6 +41,7 @@ class SoundManager {
 		loadingMusic = Assets.loadAudioBuffer(assetPath);
 		loadingMusic.onComplete(buffer -> {
 			music = new AudioSource(buffer, 0,null, 1000);
+			music.gain = globalGain;
 			trace('init music AudioSource');
 			music.play();
 			trace('called music.play()');
@@ -55,6 +65,7 @@ class SoundManager {
 			var loadingSound = Assets.loadAudioBuffer(soundPath);
 			loadingSound.onComplete(buffer -> {
 				sounds[key] = new Sound(5, buffer);
+				sounds[key].setGain(globalGain);
 				trace('init sound $soundPath');
 			});
 			loadingSound.onError(d -> {
@@ -155,6 +166,12 @@ class Sound {
 			}
 		}
 	}
+
+	public function setGain(gain:Float){
+		for(c in channels){
+			c.setGain(gain);
+		}
+	}
 }
 
 class Channel {
@@ -174,5 +191,9 @@ class Channel {
 		if (!isPlaying) {
 			source.play();
 		}
+	}
+
+	public function setGain(gain:Float){
+		source.gain = gain;
 	}
 }
