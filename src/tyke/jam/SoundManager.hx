@@ -74,11 +74,11 @@ class SoundManager {
 	}
 
 	public function stopMusic(onFinished:Void->Void=null) {
+		onFadeOutComplete = onFinished;
 		if (isMusicPlaying && !isStoppingMusic) {
 			trace('start fade out music');
 			isStoppingMusic = true;
 			musicFadeOutCountDown.reset();
-			onFadeOutComplete = onFinished;
 		}
 		
 	}
@@ -89,6 +89,12 @@ class SoundManager {
 			if (isStoppingMusic) {
 				musicFadeOutCountDown.update(elapsedSeconds);
 			}
+		}
+	}
+
+	public function dispose(){
+		if(music != null){
+			music.stop();
 		}
 	}
 
