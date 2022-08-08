@@ -131,6 +131,7 @@ class App extends Application {
 	public function changeScene(nextScene:Scene, shouldClearPoeteView:Bool = false) {
 		log('changeScene');
 		if (scene != null) {
+			trace('clear and destroy');
 			shouldClearPoeteView = true;
 			scene.destroy();
 		}
@@ -326,7 +327,7 @@ class App extends Application {
 	}
 
 	inline function log(message:String) {
-		trace('${timeStamp()} $message');
+		// trace('${timeStamp()} $message');
 	}
 
 	inline function timeStamp():String {

@@ -31,7 +31,7 @@ class SoundManager {
 		trace('called playMusic()');
 		loadingMusic = Assets.loadAudioBuffer(assetPath);
 		loadingMusic.onComplete(buffer -> {
-			music = new AudioSource(buffer);
+			music = new AudioSource(buffer, 0,null, 1000);
 			trace('init music AudioSource');
 			music.play();
 			trace('called music.play()');
@@ -73,13 +73,16 @@ class SoundManager {
 		}
 	}
 
-	public function stopMusic() {
+	public function stopMusic(onFinished:Void->Void=null) {
 		if (isMusicPlaying && !isStoppingMusic) {
 			trace('start fade out music');
 			isStoppingMusic = true;
 			musicFadeOutCountDown.reset();
+			onFadeOutComplete = onFinished;
 		}
+		
 	}
+
 
 	public function update(elapsedSeconds:Float) {
 		if (isUpdating) {
@@ -98,9 +101,18 @@ class SoundManager {
 		}
 		music.gain = nextGain;
 		if (music.gain <= 0) {
-			music.stop();
-			isStoppingMusic = false;
-			isMusicPlaying = false;
+			onMusicFadedOut();
+
+		}
+	}
+
+	var onFadeOutComplete:Void->Void;
+	function onMusicFadedOut(){
+		music.stop();
+		isStoppingMusic = false;
+		isMusicPlaying = false;
+		if(onFadeOutComplete != null){
+			onFadeOutComplete();
 		}
 	}
 
