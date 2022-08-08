@@ -87,9 +87,10 @@ class Stage {
 		return frames;
 	}
 
-	public function createSpriteRendererFor(assetPath:String, tileWidth:Int, tileHeight:Int, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):SpriteRenderer {
+	public function createSpriteRendererFor(assetPath:String, tileWidth:Int, tileHeight:Int, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0, nameOverride:String = ""):SpriteRenderer {
 		var image = Assets.getImage(assetPath);
-		return createSpriteRendererLayer(assetPath, image, tileWidth, tileHeight, isIndividualFrameBuffer, width, height);
+		var name = nameOverride.length > 0 ? nameOverride : assetPath;
+		return createSpriteRendererLayer(name, image, tileWidth, tileHeight, isIndividualFrameBuffer, width, height);
 	}
 
 	public function createGlyphRendererLayer(name:String, font:Font<FontStyle>, isPersistentFrameBuffer:Bool = false, isIndividualFrameBuffer:Bool = false, width:Int = 0, height:Int = 0):GlyphRenderer {
