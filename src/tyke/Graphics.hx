@@ -398,10 +398,9 @@ class Sprite implements Element {
 		this.height = this.h;
 		this.c = tint;
 		this.tile = tile;
-		this.visible = isVisible;
+		_memoryW = w;
+		makeVisible(isVisible);
 		// z = 0;
-		this.alphaStart = 1.0;
-		this.alphaEnd = 1.0;
 	}
 
 	public function shake(atTime:Float) {
@@ -410,13 +409,43 @@ class Sprite implements Element {
 	}
 
 	public function setFlashing(isFlashing:Bool) {
-		// todo - adhere to previously set alpha
-		if (isFlashing) {
-			alphaStart = 0.0;
-		} else {
-			alphaStart = 1.0;
+		if(isFlashing){
+			alphaEnd = 0.0;
+		}
+		else{
+			alphaEnd = visible ? 1.0 : 0.0;
+		}
+		// todo - fix visible flashing bug shit
+	}
+
+	public function makeVisible(isVisible:Bool){
+		visible = isVisible;
+		if(visible){
+			show();
+		}
+		else{
+			hide();
 		}
 	}
+
+	public function show(){
+		trace('show');
+		w = _memoryW;
+		alphaStart = 1.0;
+		alphaEnd = alphaStart;
+		alpha = alphaStart;
+	}
+
+	var _memoryW:Int;
+	public function hide(){
+		trace('hide');
+		_memoryW = w;
+		w = 0;
+		alphaStart = 0.0;
+		alphaEnd = alphaStart;
+		alpha = alphaStart;
+	}
+
 
 	public var isFlippedX(default, null):Bool;
 
@@ -439,16 +468,7 @@ class Sprite implements Element {
 		// x += adjustPosBy;
 	}
 
-	public var visible(get, set):Bool;
-
-	function get_visible():Bool {
-		return c.alpha == 0;
-	}
-
-	function set_visible(isVisible:Bool):Bool {
-		c.alpha = isVisible ? 0xff : 0x00;
-		return isVisible;
-	}
+	public var visible(default, null):Bool;
 
 	var debugElement:Shape;
 
@@ -502,7 +522,7 @@ class SpriteRenderer implements IHaveGraphicsBuffer {
 
 	public function makeSprite(x:Int, y:Int, spriteSize:Int, tileIndex:Int, framesIndex:Int = 0, isVisible:Bool = true, spriteHeight:Int = 0):Sprite {
 		var h = spriteHeight == 0 ? spriteSize : spriteHeight;
-		var sprite = new Sprite(x, y, spriteSize, h, tileIndex, isVisible);
+		var sprite = new Sprite(x, y, spriteSize, h, tileIndex, 0xffffffFF, isVisible);
 		sprite.alphaStart = 1.0;
 		sprite.timeAStart = 0.5;
 		sprite.timeADuration = 0.25;
