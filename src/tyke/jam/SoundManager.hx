@@ -18,7 +18,7 @@ class SoundManager {
 	public var isMusicPlaying(default, null):Bool;
 
 	public function new() {
-		musicFadeOutCountDown = new CountDown(0.2, () -> reduceMusicGain(), true);
+		musicFadeOutCountDown = new CountDown(0.032, () -> reduceMusicGain(), true);
 		sounds = [];
 		trace('initialized SoundManager');
 		isUpdating = true;

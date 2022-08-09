@@ -358,12 +358,12 @@ class Sprite implements Element {
 
 	// at what peote.time it have to shake
 	@custom public var shakeAtTime:Float = -100.0;
-	@custom public var shakeFrequencyY:Float = 6.0;
-	@custom public var shakeFrequencyX:Float = 6.0;
-	@custom public var shakeDistanceY:Float = 3.0;
-	@custom public var shakeDistanceX:Float = 3.0;
-	@custom public var shakeDurationX:Float = 1.2;
-	@custom public var shakeDurationY:Float = 0.9;
+	@custom public var shakeFrequencyY:Float = 0.3;
+	@custom public var shakeFrequencyX:Float = 0.3;
+	@custom public var shakeDistanceY:Float = 0.0;
+	@custom public var shakeDistanceX:Float = 1.0;
+	@custom public var shakeDurationX:Float = 0.2;
+	@custom public var shakeDurationY:Float = 0.5;
 
 	// params for shake: number of shakes, size in pixel, durationtime in seconds
 	@posX @set("Position") @formula("x + shake(shakeAtTime, shakeFrequencyX, shakeDistanceX, shakeDurationX)") public var x:Float;
