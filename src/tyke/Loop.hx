@@ -250,7 +250,10 @@ class CountDown {
 		}
 	}
 
-	public inline function reset() {
+	public inline function reset(framesPerSecond:Int=0) {
+		if(framesPerSecond > 0){
+			duration = framesPerSecond;
+		}
 		countDown = duration;
 	}
 }
