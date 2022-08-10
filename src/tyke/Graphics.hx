@@ -429,7 +429,7 @@ class Sprite implements Element {
 	}
 
 	public function show(){
-		trace('show');
+		// trace('show');
 		w = _memoryW;
 		alphaStart = 1.0;
 		alphaEnd = alphaStart;
@@ -438,7 +438,7 @@ class Sprite implements Element {
 
 	var _memoryW:Int;
 	public function hide(){
-		trace('hide');
+		// trace('hide');
 		_memoryW = w;
 		w = 0;
 		alphaStart = 0.0;

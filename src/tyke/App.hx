@@ -156,6 +156,7 @@ class App extends Application {
 			return;
 
 		scene.onPauseStart();
+		core.peoteView.stop();
 	}
 
 	public function onPauseEnd() {
@@ -164,6 +165,7 @@ class App extends Application {
 			return;
 
 		scene.onPauseEnd();
+		core.peoteView.start();
 	}
 
 	// override function onWindowDropFile(file:String) {
