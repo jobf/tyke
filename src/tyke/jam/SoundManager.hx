@@ -37,7 +37,10 @@ class SoundManager {
 		can only be called after lime preload complete
 	**/
 	public function playMusic(assetPath:String) {
-		trace('called playMusic()');
+		#if web
+		assetPath = StringTools.replace(assetPath, "ogg", "mp3");
+		#end
+		trace('called playMusic($assetPath)');
 		loadingMusic = Assets.loadAudioBuffer(assetPath);
 		loadingMusic.onComplete(buffer -> {
 			music = new AudioSource(buffer, 0,null, 1000);
