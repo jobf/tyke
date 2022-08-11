@@ -87,8 +87,9 @@ class SoundManager {
 		}
 	}
 
-	public function stopMusic(onFinished:Void->Void=null) {
+	public function stopMusic(onFinished:Void->Void=null, fadeIncrement:Float=0.1) {
 		onFadeOutComplete = onFinished;
+		this.fadeIncrement = fadeIncrement;
 		if (isMusicPlaying && !isStoppingMusic) {
 			trace('start fade out music');
 			isStoppingMusic = true;
@@ -111,10 +112,10 @@ class SoundManager {
 			music.stop();
 		}
 	}
-
+	
+	var fadeIncrement:Float = 0.1;
 	function reduceMusicGain():Void {
 		trace('reduceMusicGain ${music.gain}');
-		final fadeIncrement = 0.1;
 		var nextGain = music.gain - fadeIncrement;
 		if (nextGain < 0) {
 			nextGain = 0;

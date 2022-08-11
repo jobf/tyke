@@ -250,9 +250,9 @@ class CountDown {
 		}
 	}
 
-	public inline function reset(framesPerSecond:Int=0) {
-		if(framesPerSecond > 0){
-			duration = framesPerSecond;
+	public inline function reset(durationSeconds:Float=0) {
+		if(durationSeconds > 0){
+			duration = durationSeconds;
 		}
 		countDown = duration;
 	}
