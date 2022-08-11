@@ -214,7 +214,7 @@ class ShapeRenderer implements IHaveGraphicsBuffer {
 		_program = new Program(buffer);
 		_program.setFragmentFloatPrecision("high");
 		_program.discardAtAlpha(null);
-		final injectTimeUniform = false;
+		final injectTimeUniform = true;
 		_program.injectIntoFragmentShader(Shape.InjectFragment, injectTimeUniform);
 		_program.setColorFormula(Shape.ColorFormula);
 	}
@@ -248,6 +248,14 @@ class ShapeRenderer implements IHaveGraphicsBuffer {
 		for (shape in shapesInBuffer) {
 			shape.visible = isVisible;
 		}
+	}
+
+	public function injectIntoProgram(glslFragment:String, injectTimeUniform:Bool = true) {
+		_program.injectIntoFragmentShader('${Shape.InjectFragment} \n $glslFragment ', injectTimeUniform);
+	}
+	
+	public function setColorFormula(colorFormula:String) {
+		_program.setColorFormula(colorFormula);
 	}
 }
 
