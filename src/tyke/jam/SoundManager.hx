@@ -24,7 +24,7 @@ class SoundManager {
 		isUpdating = true;
 	}
 
-	var globalGain = 1.0;
+	var globalGain = 0.1;
 
 	public function mute(){
 		globalGain = 0;
@@ -104,6 +104,11 @@ class SoundManager {
 			if (isStoppingMusic) {
 				musicFadeOutCountDown.update(elapsedSeconds);
 			}
+			// else{
+			// 	if(music != null && music.gain != gain){
+			// 		music.gain = gain;
+			// 	}
+			// }
 		}
 	}
 
@@ -113,7 +118,7 @@ class SoundManager {
 		}
 	}
 	
-	var fadeIncrement:Float = 0.1;
+	var fadeIncrement:Float = 0.01;
 	function reduceMusicGain():Void {
 		trace('reduceMusicGain ${music.gain}');
 		var nextGain = music.gain - fadeIncrement;
@@ -148,6 +153,16 @@ class SoundManager {
 				trace('music.play()');
 				music.play();
 			}
+		}
+	}
+	var gain:Float = 0.5;
+	public function setGain(nextGain:Float) {
+		if (nextGain < 0) {
+			nextGain = 0;
+		}
+		gain = nextGain;
+		if(music != null){
+			music.gain = gain;
 		}
 	}
 }
