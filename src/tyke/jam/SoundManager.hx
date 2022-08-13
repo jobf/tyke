@@ -24,7 +24,7 @@ class SoundManager {
 		isUpdating = true;
 	}
 
-	var globalGain = 0.1;
+	var globalGain = 0.5;
 
 	public function mute(){
 		globalGain = 0;
@@ -181,6 +181,7 @@ class Sound {
 		for (c in channels) {
 			if (!c.isPlaying) {
 				c.play();
+				// trace('play sound ${Date.now()}');
 				break;
 			}
 		}
@@ -201,7 +202,7 @@ class Channel {
 	public function new(buffer:AudioBuffer) {
 		var offset = 0;
 		var length = null;
-		var loops = 1;
+		var loops = 0;
 		this.source = new AudioSource(buffer, offset, length, loops);
 		isPlaying = false;
 	}
@@ -209,6 +210,8 @@ class Channel {
 	public function play() {
 		if (!isPlaying) {
 			source.play();
+			isPlaying = true;
+			source.onComplete.add(()-> isPlaying = false);
 		}
 	}
 
