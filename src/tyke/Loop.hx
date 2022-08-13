@@ -232,6 +232,7 @@ class CountDown {
 	var countDown:Float;
 	var onComplete:() -> Void;
 	var restartWhenComplete:Bool;
+	var isReady:Bool = true;
 
 	public function new(durationSeconds:Float, onComplete:Void->Void, restartWhenComplete:Bool = false) {
 		this.duration = durationSeconds;
@@ -242,7 +243,7 @@ class CountDown {
 
 	public function update(elapsedSeconds:Float) {
 		countDown -= elapsedSeconds;
-		if (countDown <= 0) {
+		if (isReady && countDown <= 0) {
 			onComplete();
 			if (restartWhenComplete) {
 				reset();
@@ -250,11 +251,16 @@ class CountDown {
 		}
 	}
 
-	public inline function reset(durationSeconds:Float=0) {
-		if(durationSeconds > 0){
-			duration = durationSeconds;
+	public inline function reset(nextDurationSeconds:Float=0) {
+		if(nextDurationSeconds > 0){
+			duration = nextDurationSeconds;
 		}
 		countDown = duration;
+		isReady = true;
+	}
+
+	public function stop() {
+		isReady = false;
 	}
 }
 
