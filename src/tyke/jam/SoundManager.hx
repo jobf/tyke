@@ -26,9 +26,9 @@ class SoundManager {
 
 	var globalGain = 0.5;
 
-	public function mute(){
+	public function mute() {
 		globalGain = 0;
-		if(music != null){
+		if (music != null) {
 			music.gain = globalGain;
 		}
 	}
@@ -43,7 +43,7 @@ class SoundManager {
 		trace('called playMusic($assetPath)');
 		loadingMusic = Assets.loadAudioBuffer(assetPath);
 		loadingMusic.onComplete(buffer -> {
-			music = new AudioSource(buffer, 0,null, 1000);
+			music = new AudioSource(buffer, 0, null, 1000);
 			music.gain = globalGain;
 			trace('init music AudioSource');
 			music.play();
@@ -65,6 +65,9 @@ class SoundManager {
 	public function loadSounds(soundPaths:Map<Int, String>) {
 		for (key in soundPaths.keys()) {
 			var soundPath = soundPaths[key];
+			#if web
+			soundPath = StringTools.replace(soundPath, "ogg", "mp3");
+			#end
 			var loadingSound = Assets.loadAudioBuffer(soundPath);
 			loadingSound.onComplete(buffer -> {
 				sounds[key] = new Sound(5, buffer);
@@ -87,7 +90,7 @@ class SoundManager {
 		}
 	}
 
-	public function stopMusic(onFinished:Void->Void=null, fadeIncrement:Float=0.1) {
+	public function stopMusic(onFinished:Void->Void = null, fadeIncrement:Float = 0.1) {
 		onFadeOutComplete = onFinished;
 		this.fadeIncrement = fadeIncrement;
 		if (isMusicPlaying && !isStoppingMusic) {
@@ -95,30 +98,29 @@ class SoundManager {
 			isStoppingMusic = true;
 			musicFadeOutCountDown.reset();
 		}
-		
 	}
-
 
 	public function update(elapsedSeconds:Float) {
 		if (isUpdating) {
 			if (isStoppingMusic) {
 				musicFadeOutCountDown.update(elapsedSeconds);
-			}
-			// else{
-			// 	if(music != null && music.gain != gain){
+			} 
+			// else {
+			// 	if (music != null && music.gain != gain) {
 			// 		music.gain = gain;
 			// 	}
 			// }
 		}
 	}
 
-	public function dispose(){
-		if(music != null){
+	public function dispose() {
+		if (music != null) {
 			music.stop();
 		}
 	}
-	
+
 	var fadeIncrement:Float = 0.01;
+
 	function reduceMusicGain():Void {
 		trace('reduceMusicGain ${music.gain}');
 		var nextGain = music.gain - fadeIncrement;
@@ -128,16 +130,16 @@ class SoundManager {
 		music.gain = nextGain;
 		if (music.gain <= 0) {
 			onMusicFadedOut();
-
 		}
 	}
 
 	var onFadeOutComplete:Void->Void;
-	function onMusicFadedOut(){
+
+	function onMusicFadedOut() {
 		music.stop();
 		isStoppingMusic = false;
 		isMusicPlaying = false;
-		if(onFadeOutComplete != null){
+		if (onFadeOutComplete != null) {
 			onFadeOutComplete();
 		}
 	}
@@ -148,22 +150,38 @@ class SoundManager {
 			if (willPauseAudio) {
 				trace('music.pause()');
 				music.pause();
-			}
-			else{
+			} else {
 				trace('music.play()');
 				music.play();
 			}
 		}
 	}
+
 	var gain:Float = 0.5;
+
 	public function setGain(nextGain:Float) {
 		if (nextGain < 0) {
 			nextGain = 0;
 		}
+		if (nextGain > 1) {
+			nextGain = 1;
+		}
 		gain = nextGain;
-		if(music != null){
+		trace('set gain $gain');
+		if (music != null) {
 			music.gain = gain;
 		}
+		for (s in sounds) {
+			s.setGain(gain);
+		}
+	}
+
+	public function reduceGain(increment:Float) {
+		setGain(gain - increment);
+	}
+
+	public function increaseGain(increment:Float) {
+		setGain(gain + increment);
 	}
 }
 
@@ -187,8 +205,8 @@ class Sound {
 		}
 	}
 
-	public function setGain(gain:Float){
-		for(c in channels){
+	public function setGain(gain:Float) {
+		for (c in channels) {
 			c.setGain(gain);
 		}
 	}
@@ -211,11 +229,11 @@ class Channel {
 		if (!isPlaying) {
 			source.play();
 			isPlaying = true;
-			source.onComplete.add(()-> isPlaying = false);
+			source.onComplete.add(() -> isPlaying = false);
 		}
 	}
 
-	public function setGain(gain:Float){
+	public function setGain(gain:Float) {
 		source.gain = gain;
 	}
 }
