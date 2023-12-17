@@ -171,7 +171,7 @@ class UiEntity {
 		label = this.fontProgram.createLine(labelText, textX, textY);
 		var offsetX = label.x - (label.textSize * 0.5);
 		this.fontProgram.lineSetPosition(label, offsetX, label.y);
-		this.fontProgram.updateLine(label);
+		this.fontProgram.lineUpdate(label);
 	}
 
 	public function over() {}

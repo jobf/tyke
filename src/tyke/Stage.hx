@@ -25,7 +25,7 @@ class Stage {
 		buffer = new Buffer<ViewElement>(1);
 		program = new Program(buffer);
 		program.setFragmentFloatPrecision("high");
-		program.alphaEnabled = true;
+		program.blendEnabled = true;
 		program.discardAtAlpha(null);
 		display.addProgram(program);
 		view = new ViewElement(0, 0, this.width, this.height);

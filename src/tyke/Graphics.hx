@@ -78,7 +78,7 @@ class GlyphRenderer implements IHaveGraphicsBuffer {
 
 	/* redraw all sprites, e.g. call this in draw loop */
 	public function updateGraphicsBuffers() {
-		text.fontProgram.updateGlyphes();
+		text.fontProgram.updateAllGlyphes();
 	}
 }
 
@@ -95,7 +95,7 @@ class Shape implements Element {
 	@custom @varying public var sides:Float = 3.0;
 	@custom @varying public var shape:Float = 0.0;
 
-	var OPTIONS = {alpha: true};
+	var OPTIONS = {blend: true};
 
 	public static var InjectFragment = "
     #define PI 3.14159265359
@@ -261,7 +261,7 @@ class Rectangle implements Element {
 	@custom @varying public var sides:Float = 3.0;
 	@custom @varying public var shape:Float = 0.0;
 
-	var OPTIONS = {alpha: true};
+	var OPTIONS = {blend: true};
 
 	public static var InjectFragment = "
    
@@ -367,7 +367,7 @@ class Sprite implements Element {
 	@custom("alpha") @varying @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 	// @custom("alpha") @varying @constStart(0.0) @constEnd(1.0) @anim("A", "pingpong") public var alpha:Float;
 
-	var OPTIONS = {alpha: true};
+	var OPTIONS = {blend: true};
 
 	public static var InjectVertex = "
 	#define TWO_PI 6.28318530718

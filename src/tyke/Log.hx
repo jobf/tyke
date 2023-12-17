@@ -32,7 +32,7 @@ class Log {
 			fontStyle.bgColor = bg.changeAlpha(alpha);
 			fontProgram.lineSetStyle(line, fontStyle);
 			fontProgram.lineSetYPosition(line, line.y - line.height);
-			fontProgram.updateLine(line);
+			fontProgram.lineUpdate(line);
 		}
 
 		fontStyle.color = fg;
@@ -72,7 +72,7 @@ class HUD {
 			var log = getText();
 			var line = lines[i];
 			fontProgram.setLine(line, log, line.x, line.y, fontStyle);
-			fontProgram.updateLine(line);
+			fontProgram.lineUpdate(line);
 			// trace(log);
 		}
 	}

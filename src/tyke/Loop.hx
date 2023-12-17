@@ -90,7 +90,7 @@ class GlyphLoop extends PeoteViewLoop {
 				l.hasChanged = false;
 			}
 		}
-		text.fontProgram.updateGlyphes();
+		text.fontProgram.updateAllGlyphes();
 	}
 
 	override public function onKeyDown(code:KeyCode, modifier:KeyModifier) {
